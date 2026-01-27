@@ -1,18 +1,29 @@
 import { SlideNavigator } from "./core/navigator";
+import { PresenterUI } from "./presenter/ui";
 
 document.addEventListener("DOMContentLoaded", () => {
   // Sync setup
   const channel = new BroadcastChannel("slide-bun-sync");
-
+  
   // Determine if we are in presenter mode
   const isPresenter = window.location.pathname === "/presenter";
+  
   if (isPresenter) {
-    document.body.classList.add("mode-presenter");
-    // Show speaker notes
-    const notes = document.querySelectorAll(".speaker-notes");
-    notes.forEach((el) => el.removeAttribute("hidden"));
+    setupPresenterMode(channel);
+  } else {
+    setupClientMode(channel);
   }
 
+  // HMR Client (Shared)
+  const evtSource = new EventSource("/_reload");
+  evtSource.onmessage = (event) => {
+    if (event.data === "reload") {
+      location.reload();
+    }
+  };
+});
+
+function setupClientMode(channel: BroadcastChannel) {
   const navigator = new SlideNavigator({
     onSlideChange: (index) => {
       // Broadcast change
@@ -37,14 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // HMR Client
-  const evtSource = new EventSource("/_reload");
-  evtSource.onmessage = (event) => {
-    if (event.data === "reload") {
-      location.reload();
-    }
-  };
-
   // Handle hash changes
   function handleHash() {
     const hash = window.location.hash.substring(1);
@@ -59,11 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Keyboard navigation
   document.addEventListener("keydown", (e) => {
-    // In presenter mode, we might want to prevent default behavior more aggressively
-    // but for now stick to standard binding
     switch (e.key) {
       case "ArrowRight":
-      case "Space":
+      case "Space": 
       case "Enter":
       case "n":
         if (e.key === "Space") e.preventDefault();
@@ -90,4 +91,79 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   window.addEventListener("hashchange", handleHash);
-});
+}
+
+function setupPresenterMode(channel: BroadcastChannel) {
+    // 1. Extract Data from DOM before wiping it
+    const slides = document.querySelectorAll<HTMLElement>(".slide");
+    const totalSlides = slides.length;
+    const notesMap: string[] = [];
+    
+    slides.forEach((slide) => {
+        const notes = slide.querySelector(".speaker-notes");
+        if (notes) {
+            notesMap.push(notes.innerHTML);
+        } else {
+            notesMap.push("");
+        }
+    });
+
+    // 2. Initialize UI
+    const ui = new PresenterUI();
+    ui.mount();
+
+    // 3. State
+    let currentIndex = 0;
+
+    // 4. Methods
+    const update = (index: number) => {
+        currentIndex = index;
+        ui.updateViews(index, totalSlides);
+        ui.updateNotes(notesMap[index] || "");
+    };
+
+    // 5. Interaction
+    // In presenter mode, we control the remote slides via broadcast
+    const navigate = (index: number) => {
+        const target = Math.max(0, Math.min(index, totalSlides - 1));
+        if (target !== currentIndex) {
+            update(target);
+            channel.postMessage({ type: "navigate", index: target });
+        }
+    };
+
+    document.addEventListener("keydown", (e) => {
+        switch (e.key) {
+          case "ArrowRight":
+          case "Space": 
+          case "Enter":
+          case "n":
+            if (e.key === "Space") e.preventDefault();
+            navigate(currentIndex + 1);
+            break;
+          case "ArrowLeft":
+          case "p":
+            navigate(currentIndex - 1);
+            break;
+          case "Home":
+            navigate(0);
+            break;
+          case "End":
+            navigate(totalSlides - 1);
+            break;
+        }
+    });
+
+    // Listen to sync from client (if user navigates on the projector view)
+    channel.onmessage = (event) => {
+        if (event.data && event.data.type === "navigate") {
+            const index = event.data.index;
+            if (typeof index === "number" && index !== currentIndex) {
+                update(index);
+            }
+        }
+    };
+
+    // Initialize
+    update(0);
+}
