@@ -66,11 +66,11 @@ export async function generateSlides(
     target: "browser",
     minify: true,
   });
-  
+
   if (!buildResult.success || buildResult.outputs.length === 0) {
-      throw new Error("Failed to build runtime: " + JSON.stringify(buildResult.logs));
+    throw new Error("Failed to build runtime: " + JSON.stringify(buildResult.logs));
   }
-  
+
   const runtimeJs = await buildResult.outputs[0]!.text();
 
   return renderer.generate(presentation, runtimeJs);
@@ -115,7 +115,7 @@ export async function generateHTML(
   });
 
   if (!buildResult.success || buildResult.outputs.length === 0) {
-      throw new Error("Failed to build runtime: " + JSON.stringify(buildResult.logs));
+    throw new Error("Failed to build runtime: " + JSON.stringify(buildResult.logs));
   }
 
   const runtimeJs = await buildResult.outputs[0]!.text();

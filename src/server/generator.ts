@@ -14,7 +14,7 @@ export class ServerHTMLGenerator {
       target: "browser",
       minify: true,
     });
-    
+
     if (!buildResult.success || buildResult.outputs.length === 0) {
       console.error(buildResult.logs);
       throw new Error("Failed to build client runtime");
