@@ -1,867 +1,825 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>機能網羅デモ</title>
-    <style>
-      /* Theme: default */
-      :root {
-        /* Colors */
-        --c-fg: #1a1a1a;
-        --c-bg: #ffffff;
-        --c-accent: #0055ff;
-        --c-dim: #888888;
-        --c-backdrop: #000000;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>機能網羅デモ</title>
+  <style>
+    /* Theme: default */
+    :root {
+  /* Colors */
+  --c-fg: #1a1a1a;
+  --c-bg: #ffffff;
+  --c-accent: #0055ff;
+  --c-dim: #888888;
+  --c-backdrop: #000000;
 
-        /* Typography */
-        --font-base: "Helvetica Neue", Helvetica, Arial, sans-serif;
-        --font-code: "Fira Code", monospace;
+  /* Typography */
+  --font-base: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-code: "Fira Code", monospace;
 
-        /* Design baseline dimensions (used as reference for responsive scaling)
+  /* Design baseline dimensions (used as reference for responsive scaling)
      Actual slide size is calculated at runtime via CSS variables:
        --slide-base-width  (px)  : design base width (e.g. 1280)
        --slide-base-height (px)  : design base height (e.g. 720)
        --slide-base-scale  (unitless) : computed to fit viewport while preserving aspect
   */
-        --slide-base-width: 1280;
-        --slide-base-height: 720;
+  --slide-base-width: 1280;
+  --slide-base-height: 720;
 
-        /* Base font size: 1em = 16px, used as reference for all relative sizing */
-        --base-font-size: 1em;
+  /* Base font size: 1em = 16px, used as reference for all relative sizing */
+  --base-font-size: 1em;
 
-        /* Spacing (em-based, relative to base font size) */
-        --slide-padding: 4em;
-        --block-gap: 0.2em;
-        --col-gap: 0.5em;
-        --line-height: 1.4;
+  /* Spacing (em-based, relative to base font size) */
+  --slide-padding: 4em;
+  --block-gap: 0.2em;
+  --col-gap: 0.5em;
+  --line-height: 1.4;
 
-        /* Type scale multipliers (unitless, applied to em) */
-        --h1-mult: 4;
-        --h2-mult: 3;
-        --h3-mult: 2.5;
-        --text-mult: 1.8;
-        --text-sm-mult: 1.2;
+  /* Type scale multipliers (unitless, applied to em) */
+  --h1-mult: 4;
+  --h2-mult: 3;
+  --h3-mult: 2.5;
+  --text-mult: 1.8;
+  --text-sm-mult: 1.2;
 
-        /* Per-slide font scale (set per-slide via inline style e.g. --slide-font-scale: 1.2) */
-        --slide-font-scale: 1;
-      }
+  /* Per-slide font scale (set per-slide via inline style e.g. --slide-font-scale: 1.2) */
+  --slide-font-scale: 1;
+}
 
-      body {
-        margin: 0;
-        padding: 0;
-        font-family: var(--font-base);
-        /* Set base font size for rem/em calculations */
-        font-size: 16px;
-        color: var(--c-fg);
-        background: var(--c-backdrop);
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-      }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-base);
+  /* Set base font size for rem/em calculations */
+  font-size: 16px;
+  color: var(--c-fg);
+  background: var(--c-backdrop);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-      #slide-container {
-        /* Responsive sizing: compute a base scale that fits the viewport while preserving aspect.
+#slide-container {
+  /* Responsive sizing: compute a base scale that fits the viewport while preserving aspect.
      The generator injects a computed --slide-base-scale; fallback calculations can be provided
      by JS/CSS where needed. Use the base design dimensions defined in :root:
        --slide-base-width, --slide-base-height
   */
-        --slide-base-scale: calc(
-          min(100vw, calc(100vh * (var(--slide-base-width) / var(--slide-base-height)))) /
-            var(--slide-base-width)
-        );
+  --slide-base-scale: calc(
+    min(100vw, calc(100vh * (var(--slide-base-width) / var(--slide-base-height)))) /
+      var(--slide-base-width)
+  );
 
-        width: calc(var(--slide-base-width) * var(--slide-base-scale));
-        height: calc(var(--slide-base-height) * var(--slide-base-scale));
-        position: relative;
-        background: var(--c-bg);
-        overflow: hidden;
-        max-width: 100vw;
-        max-height: 100vh;
-        margin: 0 auto;
-      }
+  width: calc(var(--slide-base-width) * var(--slide-base-scale));
+  height: calc(var(--slide-base-height) * var(--slide-base-scale));
+  position: relative;
+  background: var(--c-bg);
+  overflow: hidden;
+  max-width: 100vw;
+  max-height: 100vh;
+  margin: 0 auto;
+}
 
-      .slide {
-        position: absolute;
-        top: 0;
-        left: 0;
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
 
-        /* Size is relative to the responsive container; use base design dims × base-scale */
-        width: calc(var(--slide-base-width) * var(--slide-base-scale));
-        height: calc(var(--slide-base-height) * var(--slide-base-scale));
+  /* Size is relative to the responsive container; use base design dims × base-scale */
+  width: calc(var(--slide-base-width) * var(--slide-base-scale));
+  height: calc(var(--slide-base-height) * var(--slide-base-scale));
 
-        padding: var(--slide-padding);
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        opacity: 1;
-        pointer-events: auto;
+  padding: var(--slide-padding);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 1;
+  pointer-events: auto;
 
-        /* Final font-size calculation:
+  /* Final font-size calculation:
      base 16px × responsive base scale × per-slide font scale
      - --slide-base-scale is computed to fit the viewport while maintaining aspect ratio
      - --slide-font-scale is provided per-slide (via generator), default 1
   */
-        font-size: calc(16px * var(--slide-base-scale, 1) * var(--slide-font-scale, 1));
-      }
+  font-size: calc(16px * var(--slide-base-scale, 1) * var(--slide-font-scale, 1));
+}
 
-      /* Media constraints: images/videos/iframes fit within slide bounds */
-      .slide img,
-      .slide video,
-      .slide iframe {
-        max-width: 100%;
-        max-height: calc(var(--slide-height) - (2 * var(--slide-padding)));
-        height: auto;
-        object-fit: contain;
-        display: block;
-        margin: 0 0;
-      }
+/* Media constraints: images/videos/iframes fit within slide bounds */
+.slide img,
+.slide video,
+.slide iframe {
+  max-width: 100%;
+  max-height: calc(var(--slide-height) - (2 * var(--slide-padding)));
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 0;
+}
 
-      /* Slide with background image should have different padding behavior */
-      .slide.has-background {
-        padding: 0;
-        justify-content: center;
-      }
+/* Slide with background image should have different padding behavior */
+.slide.has-background {
+  padding: 0;
+  justify-content: center;
+}
 
-      .slide.has-background > * {
-        padding: var(--slide-padding);
-        max-width: calc(100% - 2 * var(--slide-padding));
-      }
+.slide.has-background > * {
+  padding: var(--slide-padding);
+  max-width: calc(100% - 2 * var(--slide-padding));
+}
 
-      /* Hide all slides except the first one by default (for no-JS fallback) */
-      .slide:not(:first-child) {
-        opacity: 0;
-        pointer-events: none;
-      }
+/* Hide all slides except the first one by default (for no-JS fallback) */
+.slide:not(:first-child) {
+  opacity: 0;
+  pointer-events: none;
+}
 
-      /* When JS is active, .active controls visibility */
-      .js-active .slide {
-        opacity: 0;
-        pointer-events: none;
-      }
+/* When JS is active, .active controls visibility */
+.js-active .slide {
+  opacity: 0;
+  pointer-events: none;
+}
 
-      .js-active .slide.active {
-        opacity: 1;
-        pointer-events: auto;
-        z-index: 1;
-      }
+.js-active .slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}
 
-      /* Typography Defaults (em-based multipliers relative to slide root font-size) */
-      h1 {
-        font-size: calc(var(--h1-mult) * 1em);
-        margin-bottom: var(--block-gap);
-        margin-top: 0;
-        line-height: 1.2;
-      }
+/* Typography Defaults (em-based multipliers relative to slide root font-size) */
+h1 {
+  font-size: calc(var(--h1-mult) * 1em);
+  margin-bottom: var(--block-gap);
+  margin-top: 0;
+  line-height: 1.2;
+}
 
-      h2 {
-        font-size: calc(var(--h2-mult) * 1em);
-        margin-bottom: var(--block-gap);
-        margin-top: 0;
-      }
+h2 {
+  font-size: calc(var(--h2-mult) * 1em);
+  margin-bottom: var(--block-gap);
+  margin-top: 0;
+}
 
-      h3 {
-        font-size: calc(var(--h3-mult) * 1em);
-        margin-bottom: var(--block-gap);
-        margin-top: 0;
-      }
+h3 {
+  font-size: calc(var(--h3-mult) * 1em);
+  margin-bottom: var(--block-gap);
+  margin-top: 0;
+}
 
-      p,
-      ul,
-      ol {
-        font-size: calc(var(--text-mult) * 1em);
-        line-height: var(--line-height);
-        margin-top: 0;
-        margin-bottom: var(--block-gap);
-      }
+p,
+ul,
+ol {
+  font-size: calc(var(--text-mult) * 1em);
+  line-height: var(--line-height);
+  margin-top: 0;
+  margin-bottom: var(--block-gap);
+}
 
-      li {
-        line-height: var(--line-height);
-        margin-top: 0;
-        margin-bottom: var(--block-gap);
-      }
+li {
+  line-height: var(--line-height);
+  margin-top: 0;
+  margin-bottom: var(--block-gap);
+}
 
-      ul,
-      ol {
-        padding-left: 1.5em;
-      }
+ul,
+ol {
+  padding-left: 1.5em;
+}
 
-      code {
-        font-family: var(--font-code);
-        background: rgba(0, 0, 0, 0.05);
-        padding: 0.2em 0.4em;
-        border-radius: 4px;
-      }
+code {
+  font-family: var(--font-code);
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
 
-      pre {
-        background: #f4f4f4;
-        padding: 1em;
-        border-radius: 8px;
-        overflow-x: auto;
-      }
+pre {
+  background: #f4f4f4;
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+}
 
-      pre code {
-        background: none;
-        padding: 0;
-        font-size: 0.8em;
-      }
+pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.8em;
+}
 
-      /* Two-column / column layout support
+/* Two-column / column layout support
    Usage in markdown/template: wrap content in a container with class "columns"
    and place two children with class "col" to get a responsive two-column layout. */
-      .columns {
-        display: flex;
-        gap: var(--col-gap);
-        margin-top: var(--col-gap);
-        align-items: stretch;
-        width: 100%;
-        box-sizing: border-box;
-      }
+.columns {
+  display: flex;
+  gap: var(--col-gap);
+  margin-top: var(--col-gap);
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+}
 
-      /* Each column takes equal width and prevents overflow */
-      .columns .col {
-        flex: 1 1 0;
-        min-width: 0; /* allow children to shrink properly */
-        box-sizing: border-box;
-      }
+/* Each column takes equal width and prevents overflow */
+.columns .col {
+  flex: 1 1 0;
+  min-width: 0; /* allow children to shrink properly */
+  box-sizing: border-box;
+}
 
-      /* Ensure images and pre/code inside columns behave responsively */
-      .columns .col img,
-      .columns .col video,
-      .columns .col iframe {
-        max-width: 100%;
-        height: auto;
-        display: block;
-      }
+/* Ensure images and pre/code inside columns behave responsively */
+.columns .col img,
+.columns .col video,
+.columns .col iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
 
-      .columns .col pre {
-        max-width: 100%;
-        overflow: auto;
-      }
+.columns .col pre {
+  max-width: 100%;
+  overflow: auto;
+}
 
-      /* Small screens: stack columns vertically */
-      @media (max-width: 900px) {
-        .columns {
-          flex-direction: column;
-          gap: calc(var(--col-gap) / 2);
-        }
-        .columns .col {
-          width: 100%;
-        }
-      }
+/* Small screens: stack columns vertically */
+@media (max-width: 900px) {
+  .columns {
+    flex-direction: column;
+    gap: calc(var(--col-gap) / 2);
+  }
+  .columns .col {
+    width: 100%;
+  }
+}
 
-      /* Layout Design System - Responsive sizing */
-      :root {
-        /* Design baseline (used to compute responsive scale) */
-        --slide-base-width: 1280px;
-        --slide-base-height: 720px;
-      }
 
-      /* Compute a responsive base scale for slides:
+    /* Layout Design System - Responsive sizing */
+    :root {
+      /* Design baseline (used to compute responsive scale) */
+      --slide-base-width: 1280px;
+      --slide-base-height: 720px;
+    }
+
+    /* Compute a responsive base scale for slides:
        --slide-base-scale = min(viewport width, viewport height * aspect) / baseWidth
        This ensures slides scale to fit the viewport while preserving the aspect ratio.
     */
-      #slide-container {
-        --slide-base-scale: calc(
-          min(100vw, calc(100vh * (var(--slide-base-width) / var(--slide-base-height)))) /
-            var(--slide-base-width)
-        );
+    #slide-container {
+      --slide-base-scale: calc(
+        min(100vw, calc(100vh * (var(--slide-base-width) / var(--slide-base-height))))
+        / var(--slide-base-width)
+      );
 
-        /* Size the container based on the computed base scale (keeps integer px math via calc) */
-        width: calc(var(--slide-base-width) * var(--slide-base-scale));
-        height: calc(var(--slide-base-height) * var(--slide-base-scale));
-        max-width: 100vw;
-        max-height: 100vh;
-        margin: 0 auto;
-        position: relative;
-      }
+      /* Size the container based on the computed base scale (keeps integer px math via calc) */
+      width: calc(var(--slide-base-width) * var(--slide-base-scale));
+      height: calc(var(--slide-base-height) * var(--slide-base-scale));
+      max-width: 100vw;
+      max-height: 100vh;
+      margin: 0 auto;
+      position: relative;
+    }
 
-      /* Final font-size for each slide:
+    /* Final font-size for each slide:
        base 16px × responsive base scale × per-slide font scale (set per-slide via --slide-font-scale)
        Example: font-size: calc(16px * var(--slide-base-scale) * var(--slide-font-scale))
     */
-      .slide {
-        font-size: calc(16px * var(--slide-base-scale, 1) * var(--slide-font-scale, 1));
-      }
+    .slide {
+      font-size: calc(16px * var(--slide-base-scale, 1) * var(--slide-font-scale, 1));
+    }
 
-      /* Utilities */
-      .center {
-        text-align: center;
-        margin-left: auto;
-        margin-right: auto;
-        display: block;
-      }
+    /* Utilities */
+    .center {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
 
-      .left {
-        text-align: left;
-        margin-right: auto;
-        display: block;
-      }
+.left {
+  text-align: left;
+  margin-right: auto;
+  display: block;
+}
 
-      .right {
-        text-align: right;
-        margin-left: auto;
-        display: block;
-      }
+.right {
+  text-align: right;
+  margin-left: auto;
+  display: block;
+}
 
-      .top {
-        margin-top: 0;
-        margin-bottom: auto;
-      }
+.top {
+  margin-top: 0;
+  margin-bottom: auto;
+}
 
-      .bottom {
-        margin-top: auto;
-        margin-bottom: 0;
-      }
+.bottom {
+  margin-top: auto;
+  margin-bottom: 0;
+}
 
-      .slide-layout-columns {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--col-gap, 2rem);
-        width: 100%;
-        align-items: start;
-      }
+.slide-layout-columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--col-gap, 2rem);
+  width: 100%;
+  align-items: start;
+}
 
-      .column {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-      }
+.column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 
-      .caption {
-        font-size: calc(var(--text-sm-mult) * 1em);
-        color: var(--c-dim);
-        margin-top: 0.5em;
-        display: block;
-      }
+.caption {
+  font-size: calc(var(--text-sm-mult) * 1em);
+  color: var(--c-dim);
+  margin-top: 0.5em;
+  display: block;
+}
 
-      .fit {
-        max-width: 100%;
-        max-height: 80vh;
-        object-fit: contain;
-        display: block;
-        margin: 0 0;
-      }
+.fit {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  display: block;
+  margin: 0 0;
+}
 
-      .fit img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        display: block;
-      }
+.fit img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
 
-      .cover {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-        margin: 0;
-        padding: 0;
-      }
+.cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  margin: 0;
+  padding: 0;
+}
 
-      .cover img {
-        width: 100%;
-        object-fit: cover;
-        display: block;
-        max-height: 100% !important;
-      }
+.cover img {
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  max-height: 100% !important;
+}
 
-      .cover-content {
-        position: absolute;
-        top: var(--slide-padding);
-        left: var(--slide-padding);
-        right: var(--slide-padding);
-        bottom: var(--slide-padding);
-        z-index: -1;
-        margin: 0;
-        padding: 0;
-      }
+.cover-content {
+  position: absolute;
+  top: var(--slide-padding);
+  left: var(--slide-padding);
+  right: var(--slide-padding);
+  bottom: var(--slide-padding);
+  z-index: -1;
+  margin: 0;
+  padding: 0;
+}
 
-      .cover-content img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
+.cover-content img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 
-      .cover-safe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-        opacity: 0.8;
-        margin: 0;
-        padding: 0;
-      }
+.cover-safe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.8;
+  margin: 0;
+  padding: 0;
+}
 
-      .cover-safe img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
+.cover-safe img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 
-      .cover-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-        margin: 0;
-        padding: 0;
-      }
+.cover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  margin: 0;
+  padding: 0;
+}
 
-      .cover-overlay img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
+.cover-overlay img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 
-      .cover-overlay + * {
-        position: relative;
-        z-index: 1;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 2rem;
-        border-radius: 8px;
-        margin: 2rem;
-      }
+.cover-overlay + * {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2rem;
+  border-radius: 8px;
+  margin: 2rem;
+}
 
-      .opacity-0 {
-        opacity: 0;
-      }
-      .opacity-10 {
-        opacity: 0.1;
-      }
-      .opacity-20 {
-        opacity: 0.2;
-      }
-      .opacity-30 {
-        opacity: 0.3;
-      }
-      .opacity-40 {
-        opacity: 0.4;
-      }
-      .opacity-50 {
-        opacity: 0.5;
-      }
-      .opacity-60 {
-        opacity: 0.6;
-      }
-      .opacity-70 {
-        opacity: 0.7;
-      }
-      .opacity-80 {
-        opacity: 0.8;
-      }
-      .opacity-90 {
-        opacity: 0.9;
-      }
-      .opacity-100 {
-        opacity: 1;
-      }
+.opacity-0 {
+  opacity: 0;
+}
+.opacity-10 {
+  opacity: 0.1;
+}
+.opacity-20 {
+  opacity: 0.2;
+}
+.opacity-30 {
+  opacity: 0.3;
+}
+.opacity-40 {
+  opacity: 0.4;
+}
+.opacity-50 {
+  opacity: 0.5;
+}
+.opacity-60 {
+  opacity: 0.6;
+}
+.opacity-70 {
+  opacity: 0.7;
+}
+.opacity-80 {
+  opacity: 0.8;
+}
+.opacity-90 {
+  opacity: 0.9;
+}
+.opacity-100 {
+  opacity: 1;
+}
 
-      .gray-0 {
-        filter: none;
-      }
-      .gray-10 {
-        filter: grayscale(10%);
-      }
-      .gray-20 {
-        filter: grayscale(20%);
-      }
-      .gray-30 {
-        filter: grayscale(30%);
-      }
-      .gray-40 {
-        filter: grayscale(40%);
-      }
-      .gray-50 {
-        filter: grayscale(50%);
-      }
-      .gray-60 {
-        filter: grayscale(60%);
-      }
-      .gray-70 {
-        filter: grayscale(70%);
-      }
-      .gray-80 {
-        filter: grayscale(80%);
-      }
-      .gray-90 {
-        filter: grayscale(90%);
-      }
-      .gray-100 {
-        filter: grayscale(100%);
-      }
+.gray-0 {
+  filter: none;
+}
+.gray-10 {
+  filter: grayscale(10%);
+}
+.gray-20 {
+  filter: grayscale(20%);
+}
+.gray-30 {
+  filter: grayscale(30%);
+}
+.gray-40 {
+  filter: grayscale(40%);
+}
+.gray-50 {
+  filter: grayscale(50%);
+}
+.gray-60 {
+  filter: grayscale(60%);
+}
+.gray-70 {
+  filter: grayscale(70%);
+}
+.gray-80 {
+  filter: grayscale(80%);
+}
+.gray-90 {
+  filter: grayscale(90%);
+}
+.gray-100 {
+  filter: grayscale(100%);
+}
 
-      .mark {
-        background: linear-gradient(90deg, rgba(255, 230, 100, 0.95), rgba(255, 230, 100, 0.8));
-        padding: 0.08em 0.25em;
-        border-radius: 3px;
-        color: inherit;
-        display: inline;
-        box-decoration-break: clone;
-        -webkit-box-decoration-break: clone;
-      }
+.mark {
+  background: linear-gradient(90deg, rgba(255, 230, 100, 0.95), rgba(255, 230, 100, 0.8));
+  padding: 0.08em 0.25em;
+  border-radius: 3px;
+  color: inherit;
+  display: inline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
 
-      .muted {
-        color: var(--c-dim);
-        opacity: 0.9;
-      }
+.muted {
+  color: var(--c-dim);
+  opacity: 0.9;
+}
 
-      .accent {
-        color: var(--c-accent);
-      }
+.accent {
+  color: var(--c-accent);
+}
 
-      .small {
-        font-size: calc(var(--text-sm-mult) * 1em);
-        line-height: 1.2;
-      }
+.small {
+  font-size: calc(var(--text-sm-mult) * 1em);
+  line-height: 1.2;
+}
 
-      .block-center {
-        margin-left: auto;
-        margin-right: auto;
-      }
+.block-center {
+  margin-left: auto;
+  margin-right: auto;
+}
 
-      /* Utility to make an element visually cover its container but keep content readable.
+/* Utility to make an element visually cover its container but keep content readable.
    Intent: use on overlays/backgrounds to reduce contrast under text. */
-      .overlay-dim {
-        background: rgba(0, 0, 0, 0.35);
-        color: #fff;
-      }
+.overlay-dim {
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+}
 
-      @media (max-width: 640px) {
-        .mark {
-          padding: 0.04em 0.12em;
-          border-radius: 2px;
-        }
-      }
+@media (max-width: 640px) {
+  .mark {
+    padding: 0.04em 0.12em;
+    border-radius: 2px;
+  }
+}
 
-      /* Print Styles */
-      @media print {
-        @page {
-          size: landscape;
-          margin: 0;
-        }
 
-        body {
-          background: none;
-          height: auto;
-          overflow: visible;
-          display: block;
-        }
+    /* Print Styles */
+    @media print {
+  @page {
+    size: landscape;
+    margin: 0;
+  }
 
-        #slide-container {
-          width: 100%;
-          height: auto;
-          overflow: visible;
-          background: none;
-        }
+  body {
+    background: none;
+    height: auto;
+    overflow: visible;
+    display: block;
+  }
 
-        .slide {
-          position: relative;
-          top: auto;
-          left: auto;
-          width: 100vw; /* Force full width of the page */
-          height: 100vh; /* Force full height of the page */
-          opacity: 1 !important;
-          pointer-events: auto;
-          page-break-after: always; /* Legacy */
-          break-after: page; /* Modern */
-          border: none;
-          box-shadow: none;
-        }
+  #slide-container {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    background: none;
+  }
 
-        .slide.active {
-          opacity: 1;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="slide-container">
-      <section
-        class="slide layout-default"
-        id="slide-1"
-        data-id="1"
-        style="--slide-font-scale: 1.2"
-      >
-        <h1 class="center">Slide Bun Features</h1>
-        <p>全ての機能を詰め込んだデモ・スライドです。</p>
-        <p class="caption right">Created by Slide Bun</p>
-      </section>
-      <section class="slide layout-default" id="slide-2" data-id="2" style="--slide-font-scale: 1">
-        <h2>基本的なタイポグラフィ</h2>
-        <p>Markdownの標準記法がそのまま使えます。</p>
-        <ul>
-          <li><strong>強調（Bold）</strong> や <em>斜体（Italic）</em></li>
-          <li><code>インラインコード</code></li>
-          <li>リンク: <a href="https://github.com">GitHub</a></li>
-        </ul>
-        <ol>
-          <li>番号付きリスト</li>
-          <li>もサポート</li>
-        </ol>
-      </section>
-      <section class="slide layout-default" id="slide-3" data-id="3" style="--slide-font-scale: 1">
-        <h2 class="center">2カラムレイアウト</h2>
-        <p><code> ::: columns</code> で左右に分割できます。</p>
-        <div class="slide-container columns">
-          <div class="slide-container col">
-            <h3>左側</h3>
-            <ul>
-              <li>リスト</li>
-              <li>テキスト</li>
-              <li>画像など</li>
-            </ul>
-          </div>
-          <div class="slide-container col">
-            <h3>右側</h3>
-            <p>コードブロックも置けます。</p>
-            <pre><code class="language-typescript">const hello = &quot;world&quot;;
+  .slide {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100vw; /* Force full width of the page */
+    height: 100vh; /* Force full height of the page */
+    opacity: 1 !important;
+    pointer-events: auto;
+    page-break-after: always; /* Legacy */
+    break-after: page; /* Modern */
+    border: none;
+    box-shadow: none;
+  }
+
+  .slide.active {
+    opacity: 1;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div id="slide-container">
+    <section class="slide layout-default" id="slide-1" data-id="1" style="--slide-font-scale: 1.2">
+      <h1 class="center">Slide Bun Features</h1>
+<p>全ての機能を詰め込んだデモ・スライドです。</p>
+<p class="caption right">Created by Slide Bun</p>
+
+    </section>
+<section class="slide layout-default" id="slide-2" data-id="2" style="--slide-font-scale: 1">
+      <h2>基本的なタイポグラフィ</h2>
+<p>Markdownの標準記法がそのまま使えます。</p>
+<ul>
+<li><strong>強調（Bold）</strong> や <em>斜体（Italic）</em></li>
+<li><code>インラインコード</code></li>
+<li>リンク: <a href="https://github.com">GitHub</a></li>
+</ul>
+<ol>
+<li>番号付きリスト</li>
+<li>もサポート</li>
+</ol>
+
+    </section>
+<section class="slide layout-default" id="slide-3" data-id="3" style="--slide-font-scale: 1">
+      <h2 class="center">2カラムレイアウト</h2>
+<p><code> ::: columns</code> で左右に分割できます。</p>
+<div class="slide-container columns"><div class="slide-container col"><h3>左側</h3>
+<ul>
+<li>リスト</li>
+<li>テキスト</li>
+<li>画像など</li>
+</ul>
+</div><div class="slide-container col"><h3>右側</h3>
+<p>コードブロックも置けます。</p>
+<pre><code class="language-typescript">const hello = &quot;world&quot;;
 console.log(hello);
 </code></pre>
-          </div>
-        </div>
-        <p class="bottom">この行はカラムレイアウトの影響を受けません。</p>
-      </section>
-      <section
-        class="slide layout-default"
-        id="slide-4"
-        data-id="4"
-        style="--slide-font-scale: 1.2"
-      >
-        <h2 class="center">画像の最適化 (Fit)</h2>
-        <p><code>{.fit}</code> クラスでスライド内に収めます。</p>
-        <p class="fit"><img src="https://placehold.co/600x400" alt="Placeholder" /></p>
-        <p class="caption">図1: プレースホルダー画像</p>
-      </section>
-      <section class="slide layout-default" id="slide-5" data-id="5" style="--slide-font-scale: 1">
-        <h3>テキストユーティリティの例（ハイライト・枠）</h3>
-        <p>
-          テキストの意図（注目・枠付け）を示すためのユーティリティも使えます。<br />インラインで強調したい語句には
-          <code>[...]</code> とクラスを併用します（例: <code>[重要]{.mark}</code>）。
-        </p>
-        <p>この段落では <span class="mark">重要</span> な語句をハイライトして表示します。</p>
-      </section>
-      <section class="slide layout-default" id="slide-6" data-id="6" style="--slide-font-scale: 1">
-        <h3>画像ユーティリティの例（数値指定）</h3>
-        <p>意図的に画像の見た目を調整するために、数値付きユーティリティを使えます。</p>
-        <p>
-          書式は <code>{.opacity 60}</code> のようにクラス名と数値を空白で並べます。
-          数値はパーセンテージとして解釈されます。
-        </p>
-        <div class="slide-container columns">
-          <div class="slide-container col">
-            <p class="fit opacity-60 gray-80">
-              <img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted" />
-            </p>
-            <p class="caption">図2: 不透明度60%かつグレースケール80%の例</p>
-          </div>
-          <div class="slide-container col">
-            <p class="fit"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted" /></p>
-            <p class="caption">図3: フィルター無しの画像</p>
-          </div>
-        </div>
-      </section>
-      <section
-        class="slide layout-default"
-        id="slide-7"
-        data-id="7"
-        style="--slide-font-scale: 1.2"
-      >
-        <h2>背景画像 (Cover)</h2>
-        <p><code>{.cover}</code> クラスで全画面表示になります。 文字は上に重なります。</p>
-        <p class="cover">
-          <img src="https://placehold.co/1920x1080/0055ff/ffffff" alt="Background" />
-        </p>
-        <br />
-        <br />
-        <br />
+</div></div><p class="bottom">この行はカラムレイアウトの影響を受けません。</p>
 
-        <p class="center"><strong>背景の上に文字を書く</strong>ことも可能です。</p>
-      </section>
-      <section
-        class="slide layout-default"
-        id="slide-8"
-        data-id="8"
-        style="--slide-font-scale: 1.2"
-      >
-        <h2>スピーカーノート</h2>
-        <p>このスライドにはスピーカーノートがあります。<br />(画面には表示されません)</p>
-      </section>
-      <section class="slide layout-default" id="slide-9" data-id="9" style="--slide-font-scale: 1">
-        <h2>多すぎるコンテンツ</h2>
-        <p>過度なスライドへの書き込みは、誰にとっても幸せではありません。</p>
-        <p>
-          スピーカーが音読するだけのプレゼンほど聴いていてつまらないものもありませんし、スライドを読むのにいっぱいいっぱいです。
-        </p>
-        <p>とは言え、時には信じられないくらい多くの伝えたいことがあるかも知れません。</p>
-        <p>
-          そんなときでも大丈夫。
-          賢くレイアウト計算をすることで、あなたの伝えたいことをミチミチに詰め込みます。
-        </p>
-        <p>ただし、それに頼りすぎないこと。</p>
-        <p>改めて言いますが、誰にとってもトクにはなりませんから。</p>
-      </section>
-    </div>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        document.body.classList.add("js-active");
-        let currentSlideIndex = 0;
-        const slides = document.querySelectorAll(".slide");
-        const totalSlides = slides.length;
-        if (totalSlides === 0) return;
-        function computeScaleForSlide(slide, minScale = 0.6) {
-          const container = document.getElementById("slide-container");
-          const containerHeight = container ? container.clientHeight : window.innerHeight;
-          const cs = window.getComputedStyle(slide);
-          const paddingTop = parseFloat(cs.paddingTop || "0") || 0;
-          const paddingBottom = parseFloat(cs.paddingBottom || "0") || 0;
-          const availableHeight = Math.max(0, containerHeight - (paddingTop + paddingBottom));
-          const contentHeight = Math.max(
-            0,
-            (slide.scrollHeight || 0) - (paddingTop + paddingBottom),
-          );
-          if (!contentHeight || contentHeight <= availableHeight) return 1;
-          const raw = availableHeight / contentHeight;
-          return Math.max(minScale, Math.min(1, raw));
-        }
-        function applyScaleToSlide(slide) {
-          const scale = computeScaleForSlide(slide);
-          slide.style.setProperty("--text-scale", String(Number(scale.toFixed(3))));
-        }
-        function clearScaleFromSlide(slide) {
-          slide.style.removeProperty("--text-scale");
-        }
-        function showSlide(index) {
-          const target = slides[index];
-          if (target) {
-            const preScale = computeScaleForSlide(target);
-            target.style.setProperty("--text-scale", String(Number(preScale.toFixed(3))));
+    </section>
+<section class="slide layout-default" id="slide-4" data-id="4" style="--slide-font-scale: 1.2">
+      <h2 class="center">画像の最適化 (Fit)</h2>
+<p><code>{.fit}</code> クラスでスライド内に収めます。</p>
+<p class="fit"><img src="https://placehold.co/600x400" alt="Placeholder"></p>
+<p class="caption">図1: プレースホルダー画像</p>
+
+    </section>
+<section class="slide layout-default" id="slide-5" data-id="5" style="--slide-font-scale: 1">
+      <h3>テキストユーティリティの例（ハイライト・枠）</h3>
+<p>テキストの意図（注目・枠付け）を示すためのユーティリティも使えます。<br>インラインで強調したい語句には <code>[...]</code> とクラスを併用します（例: <code>[重要]{.mark}</code>）。</p>
+<p>この段落では <span class="mark">重要</span> な語句をハイライトして表示します。</p>
+
+    </section>
+<section class="slide layout-default" id="slide-6" data-id="6" style="--slide-font-scale: 1">
+      <h3>画像ユーティリティの例（数値指定）</h3>
+<p>意図的に画像の見た目を調整するために、数値付きユーティリティを使えます。</p>
+<p>書式は <code>{.opacity 60}</code> のようにクラス名と数値を空白で並べます。
+数値はパーセンテージとして解釈されます。</p>
+<div class="slide-container columns"><div class="slide-container col"><p class="fit opacity-60 gray-80"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted"></p>
+<p class="caption">図2: 不透明度60%かつグレースケール80%の例</p>
+</div><div class="slide-container col"><p class="fit"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted"></p>
+<p class="caption">図3: フィルター無しの画像</p>
+</div></div>
+    </section>
+<section class="slide layout-default" id="slide-7" data-id="7" style="--slide-font-scale: 1.2">
+      <h2>背景画像 (Cover)</h2>
+<p><code>{.cover}</code> クラスで全画面表示になります。
+文字は上に重なります。</p>
+<p class="cover"><img src="https://placehold.co/1920x1080/0055ff/ffffff" alt="Background"></p>
+<br>
+<br>
+<br>
+
+<p class="center"><strong>背景の上に文字を書く</strong>ことも可能です。</p>
+
+    </section>
+<section class="slide layout-default" id="slide-8" data-id="8" style="--slide-font-scale: 1.2">
+      <h2>スピーカーノート</h2>
+<p>このスライドにはスピーカーノートがあります。<br>(画面には表示されません)</p>
+
+    </section>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+  document.body.classList.add("js-active");
+  let currentSlideIndex = 0;
+  const slides = document.querySelectorAll(".slide");
+  const totalSlides = slides.length;
+  if (totalSlides === 0)
+    return;
+  function computeScaleForSlide(slide, minScale = 0.6) {
+    const container = document.getElementById("slide-container");
+    const containerHeight = container ? container.clientHeight : window.innerHeight;
+    const cs = window.getComputedStyle(slide);
+    const paddingTop = parseFloat(cs.paddingTop || "0") || 0;
+    const paddingBottom = parseFloat(cs.paddingBottom || "0") || 0;
+    const availableHeight = Math.max(0, containerHeight - (paddingTop + paddingBottom));
+    const contentHeight = Math.max(0, (slide.scrollHeight || 0) - (paddingTop + paddingBottom));
+    if (!contentHeight || contentHeight <= availableHeight)
+      return 1;
+    const raw = availableHeight / contentHeight;
+    return Math.max(minScale, Math.min(1, raw));
+  }
+  function applyScaleToSlide(slide) {
+    const scale = computeScaleForSlide(slide);
+    slide.style.setProperty("--text-scale", String(Number(scale.toFixed(3))));
+  }
+  function clearScaleFromSlide(slide) {
+    slide.style.removeProperty("--text-scale");
+  }
+  function showSlide(index) {
+    const target = slides[index];
+    if (target) {
+      const preScale = computeScaleForSlide(target);
+      target.style.setProperty("--text-scale", String(Number(preScale.toFixed(3))));
+    }
+    slides.forEach((slide, i) => {
+      const isActive = i === index;
+      if (isActive) {
+        slide.classList.add("active");
+        scheduleRecompute(40);
+        const imgs = Array.from(slide.querySelectorAll("img"));
+        imgs.forEach((img) => {
+          if (!img.complete) {
+            const onLoad = () => {
+              scheduleRecompute();
+              img.removeEventListener("load", onLoad);
+            };
+            img.addEventListener("load", onLoad);
           }
-          slides.forEach((slide, i) => {
-            const isActive = i === index;
-            if (isActive) {
-              slide.classList.add("active");
-              scheduleRecompute(40);
-              const imgs = Array.from(slide.querySelectorAll("img"));
-              imgs.forEach((img) => {
-                if (!img.complete) {
-                  const onLoad = () => {
-                    scheduleRecompute();
-                    img.removeEventListener("load", onLoad);
-                  };
-                  img.addEventListener("load", onLoad);
-                }
-              });
-              if (document.fonts && document.fonts.ready) {
-                document.fonts.ready
-                  .then(() => {
-                    scheduleRecompute();
-                  })
-                  .catch(() => {});
-              }
-            } else {
-              if (slide.classList.contains("active")) {
-                let cleared = false;
-                const onTrans = (e) => {
-                  if (e.propertyName === "opacity") {
-                    if (!cleared) {
-                      clearScaleFromSlide(slide);
-                      cleared = true;
-                    }
-                    slide.removeEventListener("transitionend", onTrans);
-                  }
-                };
-                slide.addEventListener("transitionend", onTrans);
-                const fallback = window.setTimeout(() => {
-                  if (!cleared) clearScaleFromSlide(slide);
-                  try {
-                    slide.removeEventListener("transitionend", onTrans);
-                  } catch {}
-                  clearTimeout(fallback);
-                }, 350);
-              } else {
+        });
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => {
+            scheduleRecompute();
+          }).catch(() => {});
+        }
+      } else {
+        if (slide.classList.contains("active")) {
+          let cleared = false;
+          const onTrans = (e) => {
+            if (e.propertyName === "opacity") {
+              if (!cleared) {
                 clearScaleFromSlide(slide);
+                cleared = true;
               }
-              slide.classList.remove("active");
+              slide.removeEventListener("transitionend", onTrans);
             }
-          });
-          currentSlideIndex = index;
-          window.location.hash = `#${index + 1}`;
-        }
-        function nextSlide() {
-          if (currentSlideIndex < totalSlides - 1) {
-            showSlide(currentSlideIndex + 1);
-          }
-        }
-        function prevSlide() {
-          if (currentSlideIndex > 0) {
-            showSlide(currentSlideIndex - 1);
-          }
-        }
-        let recomputeTimeout = null;
-        function scheduleRecompute(delay = 80) {
-          if (recomputeTimeout !== null) {
-            window.clearTimeout(recomputeTimeout);
-          }
-          recomputeTimeout = window.setTimeout(() => {
-            const active = slides[currentSlideIndex];
-            if (active) applyScaleToSlide(active);
-            recomputeTimeout = null;
-          }, delay);
-        }
-        window.addEventListener("resize", () => {
-          scheduleRecompute(80);
-        });
-        window.addEventListener("orientationchange", () => {
-          scheduleRecompute(120);
-        });
-        document.addEventListener("keydown", (e) => {
-          switch (e.key) {
-            case "ArrowRight":
-            case "Space":
-            case "Enter":
-            case "n":
-              if (e.key === "Space") e.preventDefault();
-              nextSlide();
-              break;
-            case "ArrowLeft":
-            case "p":
-              prevSlide();
-              break;
-            case "Home":
-              showSlide(0);
-              break;
-            case "End":
-              showSlide(totalSlides - 1);
-              break;
-          }
-        });
-        function handleHash() {
-          const hash = window.location.hash.substring(1);
-          const index = parseInt(hash, 10);
-          if (!isNaN(index) && index >= 1 && index <= totalSlides) {
-            showSlide(index - 1);
-          }
-        }
-        if (window.location.hash) {
-          handleHash();
+          };
+          slide.addEventListener("transitionend", onTrans);
+          const fallback = window.setTimeout(() => {
+            if (!cleared)
+              clearScaleFromSlide(slide);
+            try {
+              slide.removeEventListener("transitionend", onTrans);
+            } catch {}
+            clearTimeout(fallback);
+          }, 350);
         } else {
-          showSlide(0);
+          clearScaleFromSlide(slide);
         }
-        window.addEventListener("hashchange", handleHash);
-      });
-    </script>
-  </body>
+        slide.classList.remove("active");
+      }
+    });
+    currentSlideIndex = index;
+    window.location.hash = `#${index + 1}`;
+  }
+  function nextSlide() {
+    if (currentSlideIndex < totalSlides - 1) {
+      showSlide(currentSlideIndex + 1);
+    }
+  }
+  function prevSlide() {
+    if (currentSlideIndex > 0) {
+      showSlide(currentSlideIndex - 1);
+    }
+  }
+  let recomputeTimeout = null;
+  function scheduleRecompute(delay = 80) {
+    if (recomputeTimeout !== null) {
+      window.clearTimeout(recomputeTimeout);
+    }
+    recomputeTimeout = window.setTimeout(() => {
+      const active = slides[currentSlideIndex];
+      if (active)
+        applyScaleToSlide(active);
+      recomputeTimeout = null;
+    }, delay);
+  }
+  window.addEventListener("resize", () => {
+    scheduleRecompute(80);
+  });
+  window.addEventListener("orientationchange", () => {
+    scheduleRecompute(120);
+  });
+  document.addEventListener("keydown", (e) => {
+    switch (e.key) {
+      case "ArrowRight":
+      case "Space":
+      case "Enter":
+      case "n":
+        if (e.key === "Space")
+          e.preventDefault();
+        nextSlide();
+        break;
+      case "ArrowLeft":
+      case "p":
+        prevSlide();
+        break;
+      case "Home":
+        showSlide(0);
+        break;
+      case "End":
+        showSlide(totalSlides - 1);
+        break;
+    }
+  });
+  function handleHash() {
+    const hash = window.location.hash.substring(1);
+    const index = parseInt(hash, 10);
+    if (!isNaN(index) && index >= 1 && index <= totalSlides) {
+      showSlide(index - 1);
+    }
+  }
+  if (window.location.hash) {
+    handleHash();
+  } else {
+    showSlide(0);
+  }
+  window.addEventListener("hashchange", handleHash);
+});
+
+  </script>
+</body>
 </html>
