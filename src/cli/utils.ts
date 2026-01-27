@@ -58,16 +58,24 @@ slide-bun - Markdown to HTML slide generator
 
 Usage:
   slide-bun <input.md> [options]
+  slide-bun serve <input.md> [options]
+
+Commands:
+  serve                  Start development server with HMR
 
 Options:
   -o, --output <path>    Set output file path (default: <input>.html)
   --auto-open            Open generated HTML in default browser
+  -v, --version          Show version number
   -h, --help             Show this help message
+
+Serve Options:
+  -p, --port <number>    Set server port (default: 3000)
 
 Examples:
   slide-bun presentation.md
+  slide-bun serve presentation.md
   slide-bun presentation.md -o slides.html
-  slide-bun presentation.md --output ./dist/index.html --auto-open
 `;
 }
 
