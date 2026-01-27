@@ -43,7 +43,7 @@
     "@types/bun": "latest",
     "@types/marked": "^6.0.0",
     "oxfmt": "^0.26.0",
-    "oxlint": "^1.41.0"
+    "oxlint": "^1.42.0"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
