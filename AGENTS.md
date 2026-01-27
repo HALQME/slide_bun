@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+出力は常に日本語でお願いします。
+
+意味のある編集単位ごとに、バージョン管理システム jujutsuを用いて、
+`jj desc -m "やったこと" && jj new`
+を実行し、編集ログをつけること
+
 ## Common Development Commands
 
 - **Build / Check**: `bun run check && bun run lint && bun run format`
