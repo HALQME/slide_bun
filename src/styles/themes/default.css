@@ -1,0 +1,207 @@
+:root {
+  /* Colors */
+  --c-fg: #1a1a1a;
+  --c-bg: #ffffff;
+  --c-accent: #0055ff;
+  --c-dim: #888888;
+  --c-backdrop: #000000;
+
+  /* Typography */
+  --font-base: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-code: "Fira Code", monospace;
+
+  /* Layout Dimensions */
+  --slide-width: 1280px;
+  --slide-height: 720px;
+  --slide-padding: 4rem;
+
+  /* Text Sizes (absolute rem-based) */
+  --h1-size: 4rem;
+  --h2-size: 3rem;
+  --h3-size: 2.5rem;
+  --text-size: 2.5rem;
+  --text-sm: 1.5rem;
+
+  /* Scale factor: runtime adjusts this per-slide (unitless multiplier) */
+  --text-scale: 1;
+
+  /* Spacing */
+  --block-gap: 1rem;
+  --col-gap: 2rem;
+  --line-height: 1.4;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-base);
+  color: var(--c-fg);
+  background: var(--c-backdrop);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+#slide-container {
+  width: var(--slide-width);
+  height: var(--slide-height);
+  position: relative;
+  background: var(--c-bg);
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: var(--slide-padding);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Media constraints: images/videos/iframes fit within slide bounds */
+.slide img,
+.slide video,
+.slide iframe {
+  max-width: 100%;
+  max-height: calc((var(--slide-height) - (2 * var(--slide-padding))) / var(--text-scale, 1));
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Slide with background image should have different padding behavior */
+.slide.has-background {
+  padding: 0;
+  justify-content: center;
+}
+
+.slide.has-background > * {
+  padding: var(--slide-padding);
+  max-width: calc(100% - 2 * var(--slide-padding));
+}
+
+/* Hide all slides except the first one by default (for no-JS fallback) */
+.slide:not(:first-child) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* When JS is active, .active controls visibility */
+.js-active .slide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.js-active .slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+/* Typography Defaults */
+h1 {
+  font-size: calc(var(--h1-size) * var(--text-scale));
+  margin-bottom: var(--block-gap);
+  margin-top: 0;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: calc(var(--h2-size) * var(--text-scale));
+  margin-bottom: var(--block-gap);
+  margin-top: 0;
+}
+
+h3 {
+  font-size: calc(var(--h3-size) * var(--text-scale));
+  margin-bottom: var(--block-gap);
+  margin-top: 0;
+}
+
+p,
+ul,
+ol,
+li {
+  font-size: calc(var(--text-size) * var(--text-scale));
+  line-height: var(--line-height);
+  margin-top: 0;
+  margin-bottom: var(--block-gap);
+}
+
+ul,
+ol {
+  padding-left: 1.5em;
+}
+
+code {
+  font-family: var(--font-code);
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
+
+pre {
+  background: #f4f4f4;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.8em;
+}
+
+/* Two-column / column layout support
+   Usage in markdown/template: wrap content in a container with class "columns"
+   and place two children with class "col" to get a responsive two-column layout. */
+.columns {
+  display: flex;
+  gap: var(--col-gap);
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Each column takes equal width and prevents overflow */
+.columns .col {
+  flex: 1 1 0;
+  min-width: 0; /* allow children to shrink properly */
+  box-sizing: border-box;
+}
+
+/* Ensure images and pre/code inside columns behave responsively */
+.columns .col img,
+.columns .col video,
+.columns .col iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.columns .col pre {
+  max-width: 100%;
+  overflow: auto;
+}
+
+/* Small screens: stack columns vertically */
+@media (max-width: 900px) {
+  .columns {
+    flex-direction: column;
+    gap: calc(var(--col-gap) / 2);
+  }
+  .columns .col {
+    width: 100%;
+  }
+}

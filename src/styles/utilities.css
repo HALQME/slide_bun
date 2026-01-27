@@ -1,0 +1,370 @@
+/* ============================================================
+   Utilities - image and text helper classes
+   ============================================================
+   Purpose / Intent:
+   - These utilities are small, intention-driven helpers that let
+     authors express *what they want* the content to look like
+     rather than embedding exact CSS everywhere.
+   - They are designed to be composable and to work well with the
+     markdown extension that converts `{.class-a .class-b}` into
+     HTML class attributes. For predictable results prefer
+     hyphenated utility names like `.opacity-60` and `.gray-80`.
+   - Keep utilities low-specificity so they can be applied to inline
+     text, images, figures, or blocks. Use semantic layout classes
+     (e.g. `.column`, `.slide-layout-columns`) for larger layout intent.
+   - These utilities aim to support an "automatic typesetting" workflow:
+     annotate intent in source, let the renderer/layout rules compose
+     the final presentation automatically.
+*/
+
+/* ---------------------------
+   Existing layout helpers
+   (kept for compatibility)
+   --------------------------- */
+
+.center {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.left {
+  text-align: left;
+  margin-right: auto;
+}
+
+.right {
+  text-align: right;
+  margin-left: auto;
+}
+
+.slide-layout-columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Force 2 columns */
+  gap: var(--col-gap, 2rem);
+  width: 100%;
+  align-items: start;
+}
+
+/* Individual Column */
+.column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Prevent overflow in grid items */
+}
+
+.caption {
+  font-size: var(--text-sm, 0.8em);
+  color: var(--c-dim);
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.fit {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Ensure images inside .fit container also scale */
+.fit img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  margin: 0;
+  padding: 0;
+}
+
+.cover img {
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  max-height: 100% !important;
+}
+
+/* Background image that fits within content area */
+.cover-content {
+  position: absolute;
+  top: var(--slide-padding);
+  left: var(--slide-padding);
+  right: var(--slide-padding);
+  bottom: var(--slide-padding);
+  z-index: -1;
+  margin: 0;
+  padding: 0;
+}
+
+.cover-content img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Background image that covers entire slide but respects content area */
+.cover-safe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.8; /* Slightly transparent to ensure content readability */
+  margin: 0;
+  padding: 0;
+}
+
+.cover-safe img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Background image with content overlay */
+.cover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  margin: 0;
+  padding: 0;
+}
+
+.cover-overlay img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Add background color for cover-overlay slides */
+.cover-overlay + * {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2rem;
+  border-radius: 8px;
+  margin: 2rem;
+}
+
+/* ============================================================
+   New utilities
+   ============================================================ */
+
+/* ---------------------------
+   Naming / usage guidance
+   ---------------------------
+   - Use classnames like:
+       {.opacity-60 .gray-80} -> apply to <img>, <figure>, or any element
+       {.mark}                 -> inline highlight for text
+       {.border}               -> subtle framed emphasis for blocks/inline
+   - The markdown extensions in this project remove leading dots and
+     split on whitespace to create classes. To avoid accidental numeric
+     classes or invalid names, prefer hyphenated names (opacity-60).
+*/
+
+/* ---------------------------
+   Image opacity utilities (0..100 in tens)
+   Intent: express target opacity for visual hierarchy and layering.
+   Usage: <img class="opacity-60"> or <figure class="opacity-60">.
+*/
+
+/* Atomic opacity utilities (single responsibility, apply to any element) */
+.opacity-0 {
+  opacity: 0;
+}
+.opacity-10 {
+  opacity: 0.1;
+}
+.opacity-20 {
+  opacity: 0.2;
+}
+.opacity-30 {
+  opacity: 0.3;
+}
+.opacity-40 {
+  opacity: 0.4;
+}
+.opacity-50 {
+  opacity: 0.5;
+}
+.opacity-60 {
+  opacity: 0.6;
+}
+.opacity-70 {
+  opacity: 0.7;
+}
+.opacity-80 {
+  opacity: 0.8;
+}
+.opacity-90 {
+  opacity: 0.9;
+}
+.opacity-100 {
+  opacity: 1;
+}
+
+/* ---------------------------
+   Grayscale utilities (0..100)
+   Intent: reduce colorfulness of images to push focus to other elements.
+   Usage: <img class="gray-80"> or <figure class="gray-50">.
+*/
+/* Atomic grayscale utilities (single responsibility, apply to any element) */
+.gray-0 {
+  filter: none;
+}
+.gray-10 {
+  filter: grayscale(10%);
+}
+.gray-20 {
+  filter: grayscale(20%);
+}
+.gray-30 {
+  filter: grayscale(30%);
+}
+.gray-40 {
+  filter: grayscale(40%);
+}
+.gray-50 {
+  filter: grayscale(50%);
+}
+.gray-60 {
+  filter: grayscale(60%);
+}
+.gray-70 {
+  filter: grayscale(70%);
+}
+.gray-80 {
+  filter: grayscale(80%);
+}
+.gray-90 {
+  filter: grayscale(90%);
+}
+.gray-100 {
+  filter: grayscale(100%);
+}
+
+/* Transition helpers removed — slides don't require element-level transitions.
+   If you need animated changes in specific contexts, prefer explicit helper
+   classes such as `.transition-opacity` or `.transition-filter` applied
+   only where desired. */
+
+/* Low-specificity utilities: classes are intentionally neutral and apply to
+   any element (img, figure, container). Avoid element-qualified selectors so
+   utilities remain composable and predictable. */
+
+/* ---------------------------
+   Text utilities
+   Intent:
+   - .mark: inline highlighter to draw attention to phrases or tokens.
+   - .border: subtle framed emphasis around inline or block elements.
+   - These are intentionally low-specificity and composable.
+*/
+.mark {
+  /* Intent: highlight a text fragment like a highlighter pen */
+  background: linear-gradient(90deg, rgba(255, 230, 100, 0.95), rgba(255, 230, 100, 0.8));
+  padding: 0.08em 0.25em;
+  border-radius: 3px;
+  color: inherit;
+  display: inline;
+  box-decoration-break: clone; /* keep highlight around inline fragments */
+  -webkit-box-decoration-break: clone;
+}
+
+/* .border may be used inline (span) or on blocks (div, figure) */
+.border {
+  /* Intent: subtle framed emphasis that doesn't dominate layout */
+  border: 0.12rem solid rgba(0, 0, 0, 0.08);
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  display: inline-block;
+  background-clip: padding-box;
+}
+
+/* ---------------------------
+   Additional small utilities that support intent-driven formatting
+   --------------------------- */
+
+/* Dim or muted text for secondary info */
+.muted {
+  color: var(--c-dim);
+  opacity: 0.9;
+}
+
+/* Accent text for calls to attention */
+.accent {
+  color: var(--c-accent);
+}
+
+/* Small print */
+.small {
+  font-size: var(--text-sm);
+  line-height: 1.2;
+}
+
+/* Center block within column or slide */
+.block-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Utility to make an element visually cover its container but keep content readable.
+   Intent: use on overlays/backgrounds to reduce contrast under text. */
+.overlay-dim {
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+}
+
+/* ---------------------------
+   Practical examples / recommended usage
+   ---------------------------
+   - Image with reduced emphasis:
+       <img src="..." class="fit opacity-60 gray-80" />
+   - Highlight a word in a paragraph:
+       <p>Our <span class="mark">key idea</span> is ...</p>
+   - Give a figure a subtle frame:
+       <figure class="border"><img ...><figcaption>...</figcaption></figure>
+   - In Markdown with class extension syntax:
+       ![alt](img.jpg){.fit .opacity-60 .gray-40}
+       or
+       [Important]{.mark}
+*/
+
+/* ---------------------------
+   Accessibility notes
+   ---------------------------
+   - When reducing image contrast/opacity, ensure foreground text remains readable
+     (consider adding .overlay-dim behind text or increasing text contrast).
+   - Use `.mark` sparingly for emphasis; do not rely solely on color to convey meaning.
+*/
+
+/* ---------------------------
+   Responsive behavior / stacking
+   --------------------------- */
+@media (max-width: 640px) {
+  /* Slightly reduce highlight padding on very small devices */
+  .mark {
+    padding: 0.04em 0.12em;
+    border-radius: 2px;
+  }
+
+  /* Make framed blocks more compact */
+  .border {
+    padding: 0.25rem 0.4rem;
+  }
+}

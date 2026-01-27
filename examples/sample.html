@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>機能網羅デモ</title>
+  <style>
+    /* Theme: default */
+    :root {
+  /* Colors */
+  --c-fg: #1a1a1a;
+  --c-bg: #ffffff;
+  --c-accent: #0055ff;
+  --c-dim: #888888;
+  --c-backdrop: #000000;
+
+  /* Typography */
+  --font-base: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-code: "Fira Code", monospace;
+
+  /* Layout Dimensions */
+  --slide-width: 1280px;
+  --slide-height: 720px;
+  --slide-padding: 4rem;
+
+  /* Text Sizes (absolute rem-based) */
+  --h1-size: 4rem;
+  --h2-size: 3rem;
+  --h3-size: 2.5rem;
+  --text-size: 2.5rem;
+  --text-sm: 1.5rem;
+
+  /* Scale factor: runtime adjusts this per-slide (unitless multiplier) */
+  --text-scale: 1;
+
+  /* Spacing */
+  --block-gap: 1rem;
+  --col-gap: 2rem;
+  --line-height: 1.4;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-base);
+  color: var(--c-fg);
+  background: var(--c-backdrop);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+#slide-container {
+  width: var(--slide-width);
+  height: var(--slide-height);
+  position: relative;
+  background: var(--c-bg);
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: var(--slide-padding);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Media constraints: images/videos/iframes fit within slide bounds */
+.slide img,
+.slide video,
+.slide iframe {
+  max-width: 100%;
+  max-height: calc((var(--slide-height) - (2 * var(--slide-padding))) / var(--text-scale, 1));
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Slide with background image should have different padding behavior */
+.slide.has-background {
+  padding: 0;
+  justify-content: center;
+}
+
+.slide.has-background > * {
+  padding: var(--slide-padding);
+  max-width: calc(100% - 2 * var(--slide-padding));
+}
+
+/* Hide all slides except the first one by default (for no-JS fallback) */
+.slide:not(:first-child) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* When JS is active, .active controls visibility */
+.js-active .slide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.js-active .slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+/* Typography Defaults */
+h1 {
+  font-size: calc(var(--h1-size) * var(--text-scale));
+  margin-bottom: var(--block-gap);
+  margin-top: 0;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: calc(var(--h2-size) * var(--text-scale));
+  margin-bottom: var(--block-gap);
+  margin-top: 0;
+}
+
+h3 {
+  font-size: calc(var(--h3-size) * var(--text-scale));
+  margin-bottom: var(--block-gap);
+  margin-top: 0;
+}
+
+p,
+ul,
+ol,
+li {
+  font-size: calc(var(--text-size) * var(--text-scale));
+  line-height: var(--line-height);
+  margin-top: 0;
+  margin-bottom: var(--block-gap);
+}
+
+ul,
+ol {
+  padding-left: 1.5em;
+}
+
+code {
+  font-family: var(--font-code);
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
+
+pre {
+  background: #f4f4f4;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.8em;
+}
+
+/* Two-column / column layout support
+   Usage in markdown/template: wrap content in a container with class "columns"
+   and place two children with class "col" to get a responsive two-column layout. */
+.columns {
+  display: flex;
+  gap: var(--col-gap);
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Each column takes equal width and prevents overflow */
+.columns .col {
+  flex: 1 1 0;
+  min-width: 0; /* allow children to shrink properly */
+  box-sizing: border-box;
+}
+
+/* Ensure images and pre/code inside columns behave responsively */
+.columns .col img,
+.columns .col video,
+.columns .col iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.columns .col pre {
+  max-width: 100%;
+  overflow: auto;
+}
+
+/* Small screens: stack columns vertically */
+@media (max-width: 900px) {
+  .columns {
+    flex-direction: column;
+    gap: calc(var(--col-gap) / 2);
+  }
+  .columns .col {
+    width: 100%;
+  }
+}
+
+    /* Utilities */
+    /* ============================================================
+   Utilities - image and text helper classes
+   ============================================================
+   Purpose / Intent:
+   - These utilities are small, intention-driven helpers that let
+     authors express *what they want* the content to look like
+     rather than embedding exact CSS everywhere.
+   - They are designed to be composable and to work well with the
+     markdown extension that converts `{.class-a .class-b}` into
+     HTML class attributes. For predictable results prefer
+     hyphenated utility names like `.opacity-60` and `.gray-80`.
+   - Keep utilities low-specificity so they can be applied to inline
+     text, images, figures, or blocks. Use semantic layout classes
+     (e.g. `.column`, `.slide-layout-columns`) for larger layout intent.
+   - These utilities aim to support an "automatic typesetting" workflow:
+     annotate intent in source, let the renderer/layout rules compose
+     the final presentation automatically.
+*/
+
+/* ---------------------------
+   Existing layout helpers
+   (kept for compatibility)
+   --------------------------- */
+
+.center {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.left {
+  text-align: left;
+  margin-right: auto;
+}
+
+.right {
+  text-align: right;
+  margin-left: auto;
+}
+
+.slide-layout-columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Force 2 columns */
+  gap: var(--col-gap, 2rem);
+  width: 100%;
+  align-items: start;
+}
+
+/* Individual Column */
+.column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Prevent overflow in grid items */
+}
+
+.caption {
+  font-size: var(--text-sm, 0.8em);
+  color: var(--c-dim);
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.fit {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Ensure images inside .fit container also scale */
+.fit img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  margin: 0;
+  padding: 0;
+}
+
+.cover img {
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  max-height: 100% !important;
+}
+
+/* Background image that fits within content area */
+.cover-content {
+  position: absolute;
+  top: var(--slide-padding);
+  left: var(--slide-padding);
+  right: var(--slide-padding);
+  bottom: var(--slide-padding);
+  z-index: -1;
+  margin: 0;
+  padding: 0;
+}
+
+.cover-content img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Background image that covers entire slide but respects content area */
+.cover-safe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.8; /* Slightly transparent to ensure content readability */
+  margin: 0;
+  padding: 0;
+}
+
+.cover-safe img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Background image with content overlay */
+.cover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  margin: 0;
+  padding: 0;
+}
+
+.cover-overlay img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Add background color for cover-overlay slides */
+.cover-overlay + * {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2rem;
+  border-radius: 8px;
+  margin: 2rem;
+}
+
+/* ============================================================
+   New utilities
+   ============================================================ */
+
+/* ---------------------------
+   Naming / usage guidance
+   ---------------------------
+   - Use classnames like:
+       {.opacity-60 .gray-80} -> apply to <img>, <figure>, or any element
+       {.mark}                 -> inline highlight for text
+       {.border}               -> subtle framed emphasis for blocks/inline
+   - The markdown extensions in this project remove leading dots and
+     split on whitespace to create classes. To avoid accidental numeric
+     classes or invalid names, prefer hyphenated names (opacity-60).
+*/
+
+/* ---------------------------
+   Image opacity utilities (0..100 in tens)
+   Intent: express target opacity for visual hierarchy and layering.
+   Usage: <img class="opacity-60"> or <figure class="opacity-60">.
+*/
+
+/* Atomic opacity utilities (single responsibility, apply to any element) */
+.opacity-0 {
+  opacity: 0;
+}
+.opacity-10 {
+  opacity: 0.1;
+}
+.opacity-20 {
+  opacity: 0.2;
+}
+.opacity-30 {
+  opacity: 0.3;
+}
+.opacity-40 {
+  opacity: 0.4;
+}
+.opacity-50 {
+  opacity: 0.5;
+}
+.opacity-60 {
+  opacity: 0.6;
+}
+.opacity-70 {
+  opacity: 0.7;
+}
+.opacity-80 {
+  opacity: 0.8;
+}
+.opacity-90 {
+  opacity: 0.9;
+}
+.opacity-100 {
+  opacity: 1;
+}
+
+/* ---------------------------
+   Grayscale utilities (0..100)
+   Intent: reduce colorfulness of images to push focus to other elements.
+   Usage: <img class="gray-80"> or <figure class="gray-50">.
+*/
+/* Atomic grayscale utilities (single responsibility, apply to any element) */
+.gray-0 {
+  filter: none;
+}
+.gray-10 {
+  filter: grayscale(10%);
+}
+.gray-20 {
+  filter: grayscale(20%);
+}
+.gray-30 {
+  filter: grayscale(30%);
+}
+.gray-40 {
+  filter: grayscale(40%);
+}
+.gray-50 {
+  filter: grayscale(50%);
+}
+.gray-60 {
+  filter: grayscale(60%);
+}
+.gray-70 {
+  filter: grayscale(70%);
+}
+.gray-80 {
+  filter: grayscale(80%);
+}
+.gray-90 {
+  filter: grayscale(90%);
+}
+.gray-100 {
+  filter: grayscale(100%);
+}
+
+/* Transition helpers removed — slides don't require element-level transitions.
+   If you need animated changes in specific contexts, prefer explicit helper
+   classes such as `.transition-opacity` or `.transition-filter` applied
+   only where desired. */
+
+/* Low-specificity utilities: classes are intentionally neutral and apply to
+   any element (img, figure, container). Avoid element-qualified selectors so
+   utilities remain composable and predictable. */
+
+/* ---------------------------
+   Text utilities
+   Intent:
+   - .mark: inline highlighter to draw attention to phrases or tokens.
+   - .border: subtle framed emphasis around inline or block elements.
+   - These are intentionally low-specificity and composable.
+*/
+.mark {
+  /* Intent: highlight a text fragment like a highlighter pen */
+  background: linear-gradient(90deg, rgba(255, 230, 100, 0.95), rgba(255, 230, 100, 0.8));
+  padding: 0.08em 0.25em;
+  border-radius: 3px;
+  color: inherit;
+  display: inline;
+  box-decoration-break: clone; /* keep highlight around inline fragments */
+  -webkit-box-decoration-break: clone;
+}
+
+/* .border may be used inline (span) or on blocks (div, figure) */
+.border {
+  /* Intent: subtle framed emphasis that doesn't dominate layout */
+  border: 0.12rem solid rgba(0, 0, 0, 0.08);
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  display: inline-block;
+  background-clip: padding-box;
+}
+
+/* ---------------------------
+   Additional small utilities that support intent-driven formatting
+   --------------------------- */
+
+/* Dim or muted text for secondary info */
+.muted {
+  color: var(--c-dim);
+  opacity: 0.9;
+}
+
+/* Accent text for calls to attention */
+.accent {
+  color: var(--c-accent);
+}
+
+/* Small print */
+.small {
+  font-size: var(--text-sm);
+  line-height: 1.2;
+}
+
+/* Center block within column or slide */
+.block-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Utility to make an element visually cover its container but keep content readable.
+   Intent: use on overlays/backgrounds to reduce contrast under text. */
+.overlay-dim {
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+}
+
+/* ---------------------------
+   Practical examples / recommended usage
+   ---------------------------
+   - Image with reduced emphasis:
+       <img src="..." class="fit opacity-60 gray-80" />
+   - Highlight a word in a paragraph:
+       <p>Our <span class="mark">key idea</span> is ...</p>
+   - Give a figure a subtle frame:
+       <figure class="border"><img ...><figcaption>...</figcaption></figure>
+   - In Markdown with class extension syntax:
+       ![alt](img.jpg){.fit .opacity-60 .gray-40}
+       or
+       [Important]{.mark}
+*/
+
+/* ---------------------------
+   Accessibility notes
+   ---------------------------
+   - When reducing image contrast/opacity, ensure foreground text remains readable
+     (consider adding .overlay-dim behind text or increasing text contrast).
+   - Use `.mark` sparingly for emphasis; do not rely solely on color to convey meaning.
+*/
+
+/* ---------------------------
+   Responsive behavior / stacking
+   --------------------------- */
+@media (max-width: 640px) {
+  /* Slightly reduce highlight padding on very small devices */
+  .mark {
+    padding: 0.04em 0.12em;
+    border-radius: 2px;
+  }
+
+  /* Make framed blocks more compact */
+  .border {
+    padding: 0.25rem 0.4rem;
+  }
+}
+
+
+    /* Print Styles */
+    @media print {
+  @page {
+    size: landscape;
+    margin: 0;
+  }
+
+  body {
+    background: none;
+    height: auto;
+    overflow: visible;
+    display: block;
+  }
+
+  #slide-container {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    background: none;
+  }
+
+  .slide {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100vw; /* Force full width of the page */
+    height: 100vh; /* Force full height of the page */
+    opacity: 1 !important;
+    pointer-events: auto;
+    page-break-after: always; /* Legacy */
+    break-after: page; /* Modern */
+    border: none;
+    box-shadow: none;
+  }
+
+  .slide.active {
+    opacity: 1;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div id="slide-container">
+    <section class="slide layout-default" id="slide-1" data-id="1">
+      <h1 class="center">Slide Bun Features</h1>
+<p>全ての機能を詰め込んだデモ・スライドです。</p>
+<p class="caption right">Created by Slide Bun</p>
+
+    </section>
+<section class="slide layout-default" id="slide-2" data-id="2">
+      <h2>基本的なタイポグラフィ</h2>
+<p>Markdownの標準記法がそのまま使えます。</p>
+<ul>
+<li><strong>強調（Bold）</strong> や <em>斜体（Italic）</em></li>
+<li><code>インラインコード</code></li>
+<li>リンク: <a href="https://github.com">GitHub</a></li>
+</ul>
+<ol>
+<li>番号付きリスト</li>
+<li>もサポート</li>
+</ol>
+
+    </section>
+<section class="slide layout-default" id="slide-3" data-id="3">
+      <h2 class="center">2カラムレイアウト</h2>
+<p><code> ::: columns</code> で左右に分割できます。</p>
+<div class="slide-container columns"><div class="slide-container col"><h2>左側</h2>
+<ul>
+<li>リスト</li>
+<li>テキスト</li>
+<li>画像など</li>
+</ul>
+</div><div class="slide-container col"><h2>右側</h2>
+<p>コードブロックも置けます。</p>
+<pre><code class="language-typescript">const hello = &quot;world&quot;;
+console.log(hello);
+</code></pre>
+</div></div><p>この行はカラムレイアウトの影響を受けません。</p>
+
+    </section>
+<section class="slide layout-default" id="slide-4" data-id="4">
+      <h2 class="center">画像の最適化 (Fit)</h2>
+<p><code>{.fit}</code> クラスでスライド内に収めます。</p>
+<p class="fit"><img src="https://placehold.co/600x400" alt="Placeholder"></p>
+<p class="caption">図1: プレースホルダー画像</p>
+
+    </section>
+<section class="slide layout-default" id="slide-5" data-id="5">
+      <h3>テキストユーティリティの例（ハイライト・枠）</h3>
+<p>テキストの意図（注目・枠付け）を示すためのユーティリティも使えます。<br>インラインで強調したい語句には <code>[...]</code> とクラスを併用します（例: <code>[重要]{.mark}</code>）。</p>
+<p>この段落では <span class="mark">重要</span> な語句をハイライトして表示します。</p>
+
+    </section>
+<section class="slide layout-default" id="slide-6" data-id="6">
+      <p>フレーム付きで強調したいブロックや図は <code>.border</code> を使います:</p>
+<p class="fit border"><img src="https://placehold.co/300x200" alt="Framed"></p>
+<p class="caption">図1: フレーム付きの図（.border）</p>
+
+    </section>
+<section class="slide layout-default" id="slide-7" data-id="7">
+      <h3>画像ユーティリティの例（数値指定）</h3>
+<p>意図的に画像の見た目を調整するために、数値付きユーティリティを使えます。
+書式は <code>{.opacity 60}</code> のようにクラス名と数値を空白で並べます。</p>
+<div class="slide-container columns"><div class="slide-container col"><p class="fit opacity-60 gray-80"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted"></p>
+<p class="caption">図2: 不透明度60%かつグレースケール80%の例</p>
+</div><div class="slide-container col"><p class="fit"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted"></p>
+<p class="caption">図3: フィルター無しの画像</p>
+</div></div>
+    </section>
+<section class="slide layout-default" id="slide-8" data-id="8">
+      <h2>背景画像 (Cover)</h2>
+<p><code>{.cover}</code> クラスで全画面表示になります。
+文字は上に重なります。</p>
+<p class="cover"><img src="https://placehold.co/1920x1080/0055ff/ffffff" alt="Background"></p>
+<br>
+<br>
+<br>
+
+<p class="center"><strong>背景の上に文字を書く</strong>ことも可能です。</p>
+
+    </section>
+<section class="slide layout-default" id="slide-9" data-id="9">
+      <h2>スピーカーノート</h2>
+<p>このスライドにはスピーカーノートがあります。<br>(画面には表示されません)</p>
+
+    </section>
+<section class="slide layout-default" id="slide-10" data-id="10">
+      <h2>多すぎるコンテンツ</h2>
+<p>過度なスライドへの書き込みは、誰にとっても幸せではありません。</p>
+<p>スピーカーが音読するだけのプレゼンほど聴いていてつまらないものもありませんし、スライドを読むのにいっぱいいっぱいです。</p>
+<p>とは言え、時には信じられないくらい多くの伝えたいことがあるかも知れません。</p>
+<p>そんなときでも大丈夫。
+賢くレイアウト計算をすることで、あなたの伝えたいことをミチミチに詰め込みます。</p>
+<p>ただし、それに頼りすぎないこと。</p>
+<p>改めて言いますが、誰にとってもトクにはなりませんから。</p>
+
+    </section>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+  document.body.classList.add("js-active");
+  let currentSlideIndex = 0;
+  const slides = document.querySelectorAll(".slide");
+  const totalSlides = slides.length;
+  if (totalSlides === 0)
+    return;
+  function computeScaleForSlide(slide, minScale = 0.6) {
+    const container = document.getElementById("slide-container");
+    const containerHeight = container ? container.clientHeight : window.innerHeight;
+    const contentHeight = slide.scrollHeight || 0;
+    if (!contentHeight || contentHeight <= containerHeight)
+      return 1;
+    const raw = containerHeight / contentHeight;
+    return Math.max(minScale, Math.min(1, raw));
+  }
+  function applyScaleToSlide(slide) {
+    const scale = computeScaleForSlide(slide);
+    slide.style.setProperty("--text-scale", String(Number(scale.toFixed(3))));
+  }
+  function clearScaleFromSlide(slide) {
+    slide.style.removeProperty("--text-scale");
+  }
+  function showSlide(index) {
+    slides.forEach((slide, i) => {
+      const isActive = i === index;
+      slide.classList.toggle("active", isActive);
+      if (isActive) {
+        applyScaleToSlide(slide);
+      } else {
+        clearScaleFromSlide(slide);
+      }
+    });
+    currentSlideIndex = index;
+    window.location.hash = `#${index + 1}`;
+  }
+  function nextSlide() {
+    if (currentSlideIndex < totalSlides - 1) {
+      showSlide(currentSlideIndex + 1);
+    }
+  }
+  function prevSlide() {
+    if (currentSlideIndex > 0) {
+      showSlide(currentSlideIndex - 1);
+    }
+  }
+  function recomputeActiveScale() {
+    const active = slides[currentSlideIndex];
+    if (active)
+      applyScaleToSlide(active);
+  }
+  window.addEventListener("resize", () => {
+    requestAnimationFrame(recomputeActiveScale);
+  });
+  window.addEventListener("orientationchange", () => {
+    requestAnimationFrame(recomputeActiveScale);
+  });
+  document.addEventListener("keydown", (e) => {
+    switch (e.key) {
+      case "ArrowRight":
+      case "Space":
+      case "Enter":
+      case "n":
+        if (e.key === "Space")
+          e.preventDefault();
+        nextSlide();
+        break;
+      case "ArrowLeft":
+      case "p":
+        prevSlide();
+        break;
+      case "Home":
+        showSlide(0);
+        break;
+      case "End":
+        showSlide(totalSlides - 1);
+        break;
+    }
+  });
+  function handleHash() {
+    const hash = window.location.hash.substring(1);
+    const index = parseInt(hash, 10);
+    if (!isNaN(index) && index >= 1 && index <= totalSlides) {
+      showSlide(index - 1);
+    }
+  }
+  if (window.location.hash) {
+    handleHash();
+  } else {
+    showSlide(0);
+  }
+  window.addEventListener("hashchange", handleHash);
+});
+
+  </script>
+</body>
+</html>
