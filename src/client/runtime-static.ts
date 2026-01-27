@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => {
     switch (e.key) {
       case "ArrowRight":
-      case "Space": 
+      case "Space":
       case "Enter":
       case "n":
         if (e.key === "Space") e.preventDefault();

@@ -1,3 +1,5 @@
+import { fileURLToPath } from "url";
+
 // Core modules
 export { MarkdownParser, parseMarkdown } from "./core/parser.js";
 export { splitTokensToSlides } from "./core/splitter.js";
@@ -19,10 +21,11 @@ export { styledImageExtension, type StyledImageToken } from "./core/extensions/i
 export * from "./core/extensions/index.js";
 
 // Template and generation
-export { HTMLGenerator } from "./template/generator.js";
+export { HTMLRenderer } from "./template/renderer.js";
 
 // Client runtime
-export * from "./client/runtime.js";
+// Exporting types if needed
+export * from "./client/core/types.js";
 
 // Types
 export * from "./types/index.js";
@@ -46,7 +49,7 @@ export async function generateSlides(
   const parser = new (await import("./core/parser.js")).MarkdownParser();
   const presentation = parser.parse(markdown);
 
-  const generator = new (await import("./template/generator.js")).HTMLGenerator();
+  const renderer = new (await import("./template/renderer.js")).HTMLRenderer();
 
   // Override meta with options
   if (options?.theme) {
@@ -56,7 +59,21 @@ export async function generateSlides(
     presentation.meta.title = options.title;
   }
 
-  return generator.generate(presentation);
+  // Load runtime
+  const runtimePath = fileURLToPath(new URL("./client/runtime-static.ts", import.meta.url));
+  const buildResult = await Bun.build({
+    entrypoints: [runtimePath],
+    target: "browser",
+    minify: true,
+  });
+  
+  if (!buildResult.success || buildResult.outputs.length === 0) {
+      throw new Error("Failed to build runtime: " + JSON.stringify(buildResult.logs));
+  }
+  
+  const runtimeJs = await buildResult.outputs[0]!.text();
+
+  return renderer.generate(presentation, runtimeJs);
 }
 
 /**
@@ -79,7 +96,7 @@ export async function generateHTML(
     title?: string;
   },
 ): Promise<string> {
-  const generator = new (await import("./template/generator.js")).HTMLGenerator();
+  const renderer = new (await import("./template/renderer.js")).HTMLRenderer();
 
   // Override meta with options
   if (options?.theme) {
@@ -89,5 +106,19 @@ export async function generateHTML(
     presentation.meta.title = options.title;
   }
 
-  return generator.generate(presentation);
+  // Load runtime
+  const runtimePath = fileURLToPath(new URL("./client/runtime-static.ts", import.meta.url));
+  const buildResult = await Bun.build({
+    entrypoints: [runtimePath],
+    target: "browser",
+    minify: true,
+  });
+
+  if (!buildResult.success || buildResult.outputs.length === 0) {
+      throw new Error("Failed to build runtime: " + JSON.stringify(buildResult.logs));
+  }
+
+  const runtimeJs = await buildResult.outputs[0]!.text();
+
+  return renderer.generate(presentation, runtimeJs);
 }

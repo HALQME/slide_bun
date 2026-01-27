@@ -13,23 +13,21 @@ import type { Presentation, PresentationMeta } from "../types";
 const DEFAULT_TITLE = "Untitled Presentation";
 const DEFAULT_THEME = "default";
 
-export class HTMLGenerator {
+export class HTMLRenderer {
   private markedInstance: Marked;
-  private transpiler: Bun.Transpiler;
 
   constructor() {
     this.markedInstance = this.createMarkedInstance();
-    this.transpiler = new Bun.Transpiler({ loader: "ts" });
   }
 
-  async generate(presentation: Presentation): Promise<string> {
+  async generate(presentation: Presentation, runtimeScriptContent: string): Promise<string> {
     const { slides, meta } = presentation;
     const config = this.extractConfig(meta);
 
     const assets = await this.loadAssets(config.theme);
     const slidesHtml = this.renderSlides(slides);
 
-    return this.buildHTML(config, assets, slidesHtml);
+    return this.buildHTML(config, assets, slidesHtml, runtimeScriptContent);
   }
 
   private createMarkedInstance(): Marked {
@@ -65,23 +63,16 @@ export class HTMLGenerator {
     }
 
     // Load other assets
-    const [utilitiesCss, printCss, runtimeJs] = await Promise.all([
+    const [utilitiesCss, printCss] = await Promise.all([
       Bun.file("src/styles/utilities.css").text(),
       Bun.file("src/styles/print.css").text(),
-      this.loadRuntime(),
     ]);
 
     return {
       themeCss,
       utilitiesCss,
       printCss,
-      runtimeJs,
     };
-  }
-
-  private async loadRuntime(): Promise<string> {
-    const runtimeTs = await Bun.file("src/client/runtime.ts").text();
-    return this.transpiler.transformSync(runtimeTs);
   }
 
   private renderSlides(slides: Presentation["slides"]): string {
@@ -90,6 +81,13 @@ export class HTMLGenerator {
 
   private renderSlide(slide: Presentation["slides"][0]): string {
     const contentHtml = this.markedInstance.parser(slide.contentTokens);
+
+    // Render speaker notes if available
+    let notesHtml = "";
+    if (slide.noteTokens && slide.noteTokens.length > 0) {
+      notesHtml = `<div class="speaker-notes" hidden>${this.markedInstance.parser(slide.noteTokens)}</div>`;
+    }
+
     const layoutClass = slide.layout ? `layout-${slide.layout}` : "";
 
     // Calculate font-size based on layout and content length
@@ -100,6 +98,7 @@ export class HTMLGenerator {
     return `
     <section class="slide ${layoutClass}" id="slide-${slide.id}" data-id="${slide.id}" style="${styleAttr}">
       ${contentHtml}
+      ${notesHtml}
     </section>
     `.trim();
   }
@@ -108,6 +107,7 @@ export class HTMLGenerator {
     config: { title: string; theme: string },
     assets: Awaited<ReturnType<typeof this.loadAssets>>,
     slidesHtml: string,
+    runtimeScript: string,
   ): string {
     return `<!DOCTYPE html>
 <html lang="en">
@@ -165,7 +165,7 @@ export class HTMLGenerator {
     ${slidesHtml}
   </div>
   <script>
-    ${assets.runtimeJs}
+    ${runtimeScript}
   </script>
 </body>
 </html>`;

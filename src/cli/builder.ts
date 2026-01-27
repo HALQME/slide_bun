@@ -1,5 +1,5 @@
 import { parseMarkdown } from "../core/parser";
-import { HTMLGenerator } from "../template/generator";
+import { HTMLRenderer } from "../template/renderer";
 import type { CLIOptions } from "./utils";
 import { getOutputPath, ensureOutputDirectory, validateInputFile } from "./utils";
 
@@ -18,11 +18,25 @@ export async function build(inputPath: string, options: CLIOptions): Promise<str
     // 1. Parse
     const presentation = parseMarkdown(markdown);
 
-    // 2. Generate HTML
-    const generator = new HTMLGenerator();
-    const html = await generator.generate(presentation);
+    // 2. Prepare Runtime (Static)
+    const buildResult = await Bun.build({
+      entrypoints: ["src/client/runtime-static.ts"],
+      target: "browser",
+      minify: true,
+    });
 
-    // 3. Write Output
+    if (!buildResult.success || buildResult.outputs.length === 0) {
+      console.error(buildResult.logs);
+      throw new Error("Failed to build client runtime");
+    }
+
+    const runtimeJs = await buildResult.outputs[0]!.text();
+
+    // 3. Generate HTML
+    const renderer = new HTMLRenderer();
+    const html = await renderer.generate(presentation, runtimeJs);
+
+    // 4. Write Output
     await Bun.write(outputPath, html);
     console.log(`Generated: ${outputPath}`);
 

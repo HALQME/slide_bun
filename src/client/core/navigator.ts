@@ -6,12 +6,14 @@ export class SlideNavigator {
   private container: HTMLElement | null;
   private minScale: number;
   private recomputeTimeout: number | null = null;
+  private onSlideChange?: (index: number) => void;
 
   constructor(options: NavigatorOptions = {}) {
     const selector = options.slideSelector || ".slide";
     this.slides = Array.from(document.querySelectorAll<HTMLElement>(selector));
     this.container = document.getElementById(options.containerId || "slide-container");
     this.minScale = options.minScale || 0.6;
+    this.onSlideChange = options.onSlideChange;
 
     // Indicate JS is active
     document.body.classList.add("js-active");
@@ -38,12 +40,16 @@ export class SlideNavigator {
     window.removeEventListener("orientationchange", this.handleOrientation);
   }
 
-  public goTo(index: number) {
+  public goTo(index: number, suppressCallback = false) {
     if (this.slides.length === 0) return;
-    
+
     // Clamp index
     const targetIndex = Math.max(0, Math.min(index, this.totalSlides - 1));
-    
+
+    // If already there, do we still re-render? Yes, to ensure scale is correct.
+    // But maybe we skip callback if index didn't change?
+    // For now, let's proceed.
+
     // Precompute scale for target
     const target = this.slides[targetIndex];
     if (target) {
@@ -108,7 +114,12 @@ export class SlideNavigator {
       }
     });
 
+    const prevIndex = this.currentSlideIndex;
     this.currentSlideIndex = targetIndex;
+
+    if (!suppressCallback && this.onSlideChange && prevIndex !== targetIndex) {
+      this.onSlideChange(targetIndex);
+    }
   }
 
   public next() {
