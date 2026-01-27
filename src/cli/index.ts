@@ -4,6 +4,11 @@ import { startServer } from "../server/index";
 
 export async function runCLI(args: string[]): Promise<string> {
   try {
+    if (args.length === 0) {
+      console.log(showHelp());
+      process.exit(0);
+    }
+
     // Handle "serve" command
     if (args[0] === "serve") {
       const serveArgs = args.slice(1);
