@@ -1,6 +1,6 @@
 /**
  * Helpers to convert attribute strings like:
- *   ".opacity 60 .gray 80 .mark .border"
+ *   ".opacity 60 .gray 80 .mark"
  * into safe class names:
  *   "opacity-60 gray-80 mark border"
  *

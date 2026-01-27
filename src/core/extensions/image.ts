@@ -1,5 +1,4 @@
 import type { TokenizerAndRendererExtension, Tokens } from "marked";
-import { attrsToClass } from "./classUtils";
 
 export interface StyledImageToken extends Tokens.Generic {
   type: "styledImage";

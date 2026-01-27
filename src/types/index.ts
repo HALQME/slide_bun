@@ -21,4 +21,5 @@ export interface Slide {
   contentTokens: Token[]; // MarkedのToken配列（聴衆用）
   noteTokens: Token[]; // MarkedのToken配列（ノート用）
   layout?: string; // 'default' | 'center' | 'columns'
+  contentLength?: number; // コンテンツ量の指標（テキスト文字数などで推定）
 }

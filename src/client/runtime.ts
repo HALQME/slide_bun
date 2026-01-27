@@ -27,12 +27,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("slide-container");
     const containerHeight = container ? container.clientHeight : window.innerHeight;
 
-    // slide.scrollHeight is content height including paddings
-    const contentHeight = slide.scrollHeight || 0;
+    // Use computed padding to measure the available inner height for content
+    const cs = window.getComputedStyle(slide);
+    const paddingTop = parseFloat(cs.paddingTop || "0") || 0;
+    const paddingBottom = parseFloat(cs.paddingBottom || "0") || 0;
+    const availableHeight = Math.max(0, containerHeight - (paddingTop + paddingBottom));
 
-    if (!contentHeight || contentHeight <= containerHeight) return 1;
+    // slide.scrollHeight includes padding; subtract padding to get content box height
+    const contentHeight = Math.max(0, (slide.scrollHeight || 0) - (paddingTop + paddingBottom));
 
-    const raw = containerHeight / contentHeight;
+    if (!contentHeight || contentHeight <= availableHeight) return 1;
+
+    const raw = availableHeight / contentHeight;
     return Math.max(minScale, Math.min(1, raw));
   }
 
@@ -47,17 +53,78 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showSlide(index: number) {
+    // Precompute and apply scale for the target slide before toggling visibility
+    // to reduce layout shift when it becomes visible.
+    const target = slides[index];
+    if (target) {
+      const preScale = computeScaleForSlide(target);
+      target.style.setProperty("--text-scale", String(Number(preScale.toFixed(3))));
+    }
+
     slides.forEach((slide, i) => {
       const isActive = i === index;
-      slide.classList.toggle("active", isActive);
+
       if (isActive) {
-        // Compute and apply per-slide scale so content fits
-        applyScaleToSlide(slide);
+        // Make target visible first (so CSS transition can run) and schedule
+        // a more thorough recompute after images/fonts settle.
+        slide.classList.add("active");
+        // Initial pass applied above; schedule a follow-up recompute for accuracy.
+        scheduleRecompute(40);
+
+        // If there are images that haven't loaded yet, recompute after they load.
+        const imgs = Array.from(slide.querySelectorAll("img"));
+        imgs.forEach((img) => {
+          if (!img.complete) {
+            const onLoad = () => {
+              scheduleRecompute();
+              img.removeEventListener("load", onLoad);
+            };
+            img.addEventListener("load", onLoad);
+          }
+        });
+
+        // Recompute after fonts are loaded (if supported)
+        if ((document as any).fonts && (document as any).fonts.ready) {
+          (document as any).fonts.ready
+            .then(() => {
+              scheduleRecompute();
+            })
+            .catch(() => {});
+        }
       } else {
-        // Clear inline scale on non-active slides to avoid stale overrides
-        clearScaleFromSlide(slide);
+        // When hiding a previously-active slide, delay clearing its --text-scale
+        // until after the opacity transition completes to avoid visual jumps.
+        // If there is no transitionend event, fallback after a short timeout.
+        if (slide.classList.contains("active")) {
+          let cleared = false;
+          const onTrans = (e: TransitionEvent) => {
+            if (e.propertyName === "opacity") {
+              if (!cleared) {
+                clearScaleFromSlide(slide);
+                cleared = true;
+              }
+              slide.removeEventListener("transitionend", onTrans as EventListener);
+            }
+          };
+          slide.addEventListener("transitionend", onTrans as EventListener);
+
+          // Fallback: ensure we eventually clear even if transition doesn't fire.
+          const fallback = window.setTimeout(() => {
+            if (!cleared) clearScaleFromSlide(slide);
+            try {
+              slide.removeEventListener("transitionend", onTrans as EventListener);
+            } catch {}
+            clearTimeout(fallback);
+          }, 350);
+        } else {
+          // If it wasn't active, clear immediately.
+          clearScaleFromSlide(slide);
+        }
+
+        slide.classList.remove("active");
       }
     });
+
     currentSlideIndex = index;
     // Update URL hash
     window.location.hash = `#${index + 1}`;
@@ -75,17 +142,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Recompute scale for the active slide on resize or orientation change
-  function recomputeActiveScale() {
-    const active = slides[currentSlideIndex];
-    if (active) applyScaleToSlide(active);
+  // Debounced recompute helper
+  let recomputeTimeout: number | null = null;
+  function scheduleRecompute(delay = 80) {
+    if (recomputeTimeout !== null) {
+      window.clearTimeout(recomputeTimeout);
+    }
+    recomputeTimeout = window.setTimeout(() => {
+      const active = slides[currentSlideIndex];
+      if (active) applyScaleToSlide(active);
+      recomputeTimeout = null;
+    }, delay);
   }
+
   window.addEventListener("resize", () => {
-    // Debounce light (simple rAF) to avoid layout thrash during resizing
-    requestAnimationFrame(recomputeActiveScale);
+    // Debounce to avoid layout thrash during resizing
+    scheduleRecompute(80);
   });
   window.addEventListener("orientationchange", () => {
-    requestAnimationFrame(recomputeActiveScale);
+    scheduleRecompute(120);
   });
 
   // Keyboard navigation

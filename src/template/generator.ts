@@ -6,6 +6,7 @@ import {
   styledImageExtension,
   styledParagraphExtension,
 } from "../core/extensions";
+import { getSlideStyleAttribute, type LayoutType } from "../core/layout-design";
 import type { Presentation, PresentationMeta } from "../types";
 
 // Constants
@@ -91,8 +92,13 @@ export class HTMLGenerator {
     const contentHtml = this.markedInstance.parser(slide.contentTokens);
     const layoutClass = slide.layout ? `layout-${slide.layout}` : "";
 
+    // Calculate font-size based on layout and content length
+    const layout = (slide.layout || "default") as LayoutType;
+    const contentLength = slide.contentLength ?? 0;
+    const styleAttr = getSlideStyleAttribute(layout, contentLength);
+
     return `
-    <section class="slide ${layoutClass}" id="slide-${slide.id}" data-id="${slide.id}">
+    <section class="slide ${layoutClass}" id="slide-${slide.id}" data-id="${slide.id}" style="${styleAttr}">
       ${contentHtml}
     </section>
     `.trim();
@@ -112,6 +118,40 @@ export class HTMLGenerator {
   <style>
     /* Theme: ${config.theme} */
     ${assets.themeCss}
+
+    /* Layout Design System - Responsive sizing */
+    :root {
+      /* Design baseline (used to compute responsive scale) */
+      --slide-base-width: 1280px;
+      --slide-base-height: 720px;
+    }
+
+    /* Compute a responsive base scale for slides:
+       --slide-base-scale = min(viewport width, viewport height * aspect) / baseWidth
+       This ensures slides scale to fit the viewport while preserving the aspect ratio.
+    */
+    #slide-container {
+      --slide-base-scale: calc(
+        min(100vw, calc(100vh * (var(--slide-base-width) / var(--slide-base-height))))
+        / var(--slide-base-width)
+      );
+
+      /* Size the container based on the computed base scale (keeps integer px math via calc) */
+      width: calc(var(--slide-base-width) * var(--slide-base-scale));
+      height: calc(var(--slide-base-height) * var(--slide-base-scale));
+      max-width: 100vw;
+      max-height: 100vh;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* Final font-size for each slide:
+       base 16px × responsive base scale × per-slide font scale (set per-slide via --slide-font-scale)
+       Example: font-size: calc(16px * var(--slide-base-scale) * var(--slide-font-scale))
+    */
+    .slide {
+      font-size: calc(16px * var(--slide-base-scale, 1) * var(--slide-font-scale, 1));
+    }
 
     /* Utilities */
     ${assets.utilitiesCss}

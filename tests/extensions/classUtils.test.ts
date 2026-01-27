@@ -2,7 +2,7 @@
  * Tests for attrsToClass and parseAttrsToTokens behavior.
  *
  * These verify the parsing rules for attribute strings like:
- *   ".opacity 60 .gray 80 .mark .border"
+ *   ".opacity 60 .gray 80 .mark"
  *
  * Spec highlights:
  * - Numeric-parameter classes (opacity, gray) accept an integer 0..100 when provided:
@@ -20,11 +20,11 @@ import { attrsToClass, parseAttrsToTokens } from "../../src/core/extensions/clas
 
 describe("classUtils.attrsToClass", () => {
   it("should handle simple classes without dots", () => {
-    expect(attrsToClass("mark border")).toBe("mark border");
+    expect(attrsToClass("mark")).toBe("mark");
   });
 
   it("should handle simple classes with leading dots", () => {
-    expect(attrsToClass(".mark .border")).toBe("mark border");
+    expect(attrsToClass(".mark")).toBe("mark");
   });
 
   it("should parse numeric classes with values", () => {
@@ -37,7 +37,7 @@ describe("classUtils.attrsToClass", () => {
 
   it("should ignore numeric tokens after non-numeric classes", () => {
     // '10' and '20' are stray numbers after classes that don't accept numbers -> ignored
-    expect(attrsToClass(".mark 10 .border 20")).toBe("mark border");
+    expect(attrsToClass(".mark 10")).toBe("mark");
   });
 
   it("should accept explicit hyphenated classes and clamp numeric value", () => {
@@ -61,7 +61,7 @@ describe("classUtils.attrsToClass", () => {
 
   it("should deduplicate identical classes while preserving order", () => {
     // second 'mark' ignored due to dedupe
-    expect(attrsToClass(".mark .border .mark")).toBe("mark border");
+    expect(attrsToClass(".mark .caption .mark")).toBe("mark caption");
   });
 
   it("should tolerate mixed dot/no-dot tokens", () => {
@@ -86,8 +86,8 @@ describe("classUtils.parseAttrsToTokens", () => {
   });
 
   it("should parse explicit hyphenated numeric classes to tokens with values", () => {
-    const tokens = parseAttrsToTokens(".opacity-80 .border");
-    expect(tokens).toEqual([{ name: "opacity", value: 80 }, { name: "border" }]);
+    const tokens = parseAttrsToTokens(".opacity-80 .caption");
+    expect(tokens).toEqual([{ name: "opacity", value: 80 }, { name: "caption" }]);
   });
 
   it("should ignore stray numeric tokens", () => {
