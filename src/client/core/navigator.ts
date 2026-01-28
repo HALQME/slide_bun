@@ -53,8 +53,12 @@ export class SlideNavigator {
     // Precompute scale for target
     const target = this.slides[targetIndex];
     if (target) {
-      const preScale = this.computeScaleForSlide(target);
-      target.style.setProperty("--text-scale", String(Number(preScale.toFixed(3))));
+      try {
+        const preScale = this.computeScaleForSlide(target);
+        target.style.setProperty("--text-scale", String(Number(preScale.toFixed(3))));
+      } catch (e) {
+        console.warn("Failed to compute scale for slide:", e);
+      }
     }
 
     this.slides.forEach((slide, i) => {
