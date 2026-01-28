@@ -214,7 +214,7 @@ pre code {
   margin-top: var(--col-gap);
   flex: 1; /* Fill remaining vertical space */
   min-height: 0;
-  align-items: center; /* Vertically center content */
+  align-items: flex-start; /* Align content to top */
   width: 100%;
   box-sizing: border-box;
 }
@@ -223,10 +223,9 @@ pre code {
 .columns .col {
   flex: 1 1 0;
   min-width: 0; /* allow children to shrink properly */
-  height: 100%; /* Fill column height */
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   box-sizing: border-box;
 }
 
@@ -235,7 +234,6 @@ pre code {
 .columns .col video,
 .columns .col iframe {
   max-width: 100%;
-  max-height: 100%;
   height: auto;
   display: block;
 }
