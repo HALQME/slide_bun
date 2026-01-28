@@ -2,11 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-出力は常に日本語でお願いします。
+## 実行手順
 
-意味のある編集単位ごとに、バージョン管理システム jujutsuを用いて、
-`jj desc -m "やったこと" && jj new`
-を実行し、編集ログをつけること
+1. `bun run check` を実行して品質チェックとエラー修正を行う。
+2. チェックが通れば `jj commit -m "作業内容"` を実行する。
+
+### 例
+
+```bash
+# 変更をコミットする場合
+bun run check
+jj commit -m "機能追加: ユーザー認証機能を実装"
+```
+
+### 注意事項
+
+- コミットメッセージは明確で簡潔に記述すること。
+- 変更前に必ず `bun run check` を実行してください。
 
 ## Common Development Commands
 
@@ -22,12 +34,17 @@ These commands are the primary workflow for development, ensuring code quality a
 
 The project is a **Markdown‑to‑HTML slide generator** built with Bun and TypeScript. The main components are:
 
-1. **`src/client/runtime.ts`** – Minimal client‑side runtime that handles slide navigation, hash‑based routing, and keyboard shortcuts.
-2. **`src/core/parser.ts`** – Wraps the `marked` library, registers custom markdown extensions, parses front‑matter with `gray‑matter`, tokenizes the markdown and delegates slide splitting.
-3. **`src/core/splitter.ts`** – Converts the flat token stream from `marked` into an array of `Slide` objects, separating content and speaker notes (via `::: speaker` containers) and handling horizontal rules (`---`) as slide delimiters.
-4. **`src/core/extensions/*`** – Custom `marked` extensions for styled headings, spans, images, paragraphs, and container blocks. They provide additional syntax such as `[text]{.class}` and `::: container` blocks.
-5. **`src/template/generator.ts`** – Generates the final HTML document. It bundles CSS themes, utility styles, and transpiles the TypeScript runtime to JavaScript using `Bun.Transpiler`. Slides are rendered with `marked` and embedded into a simple HTML template.
-6. **Types (`src/types/*.ts`)** – Define the `Presentation`, `Slide`, and meta data structures used across the pipeline.
+1. **`src/client/runtime-server.ts`** – Server-side runtime for live preview mode.
+2. **`src/client/runtime-static.ts`** – Static client-side runtime that handles slide navigation, hash‑based routing, and keyboard shortcuts.
+3. **`src/client/core/navigator.ts`** – Core navigation logic for slide transitions.
+4. **`src/client/presenter/`** – Presenter UI components and styles.
+5. **`src/core/parser.ts`** – Wraps the `marked` library, registers custom markdown extensions, parses front‑matter with `gray‑matter`, tokenizes the markdown and delegates slide splitting.
+6. **`src/core/splitter.ts`** – Converts the flat token stream from `marked` into an array of `Slide` objects, separating content and speaker notes (via `::: speaker` containers) and handling horizontal rules (`---`) as slide delimiters.
+7. **`src/core/extensions/*`** – Custom `marked` extensions for styled headings, spans, images, paragraphs, and container blocks. They provide additional syntax such as `[text]{.class}` and `::: container` blocks.
+8. **`src/core/layout-design.ts`** – Layout design utilities for slide formatting.
+9. **`src/server/generator.ts`** – Generates the final HTML document. It bundles CSS themes, utility styles, and transpiles the TypeScript runtime to JavaScript using `Bun.Transpiler`. Slides are rendered with `marked` and embedded into a simple HTML template.
+10. **`src/template/renderer.ts`** – Template rendering utilities.
+11. **Types (`src/types/*.ts`)** – Define the `Presentation`, `Slide`, and meta data structures used across the pipeline.
 
 The flow is:
 
@@ -39,17 +56,23 @@ Markdown source → MarkdownParser (marked + extensions) → Token stream
 
 ## Project Structure
 
-- `src/client/` – Runtime code executed in the browser.
-- `src/core/` – Parsing, token splitting, and markdown extensions.
-- `src/template/` – HTML generation and asset bundling.
+- `src/cli/` – Command-line interface and builder utilities.
+- `src/client/` – Runtime code executed in the browser (static and server modes).
+  - `src/client/core/` – Core navigation and types.
+  - `src/client/presenter/` – Presenter UI and styles.
+- `src/core/` – Parsing, token splitting, markdown extensions, and layout design.
+- `src/server/` – Server-side HTML generation.
+- `src/template/` – Template rendering utilities.
 - `src/types/` – Shared TypeScript interfaces.
 - `styles/` – CSS themes and utilities used by the generator.
+- `tests/` – Test suites for all components.
 
 ## Helpful Tips for Claude Code
 
 - When adding new markdown syntax, extend the appropriate extension under `src/core/extensions` and ensure the parser registers it.
 - If you need to expose additional slide metadata, modify `src/core/parser.ts` where the `PresentationMeta` object is built.
-- For changes affecting the client runtime, update `src/client/runtime.ts` and re‑run the generator to verify navigation works.
+- For changes affecting the client runtime, update `src/client/runtime-static.ts` and re‑run the generator to verify navigation works.
+- For server-side changes, update `src/client/runtime-server.ts` accordingly.
 - Output MUST BE in Japanese.
 
 ---
