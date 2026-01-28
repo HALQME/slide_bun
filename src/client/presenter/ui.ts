@@ -54,8 +54,7 @@ export class PresenterUI {
     const currentView = document.createElement("div");
     currentView.id = "presenter-current";
     this.currentFrame = document.createElement("iframe");
-    // Use role=preview to disable sync in the iframe
-    this.currentFrame.src = "/?role=preview"; 
+    // Initial src is empty to avoid race condition with hash update
     currentView.appendChild(this.currentFrame);
     
     // Next Slide
@@ -65,7 +64,7 @@ export class PresenterUI {
     nextLabel.className = "label";
     nextLabel.textContent = "NEXT SLIDE";
     this.nextFrame = document.createElement("iframe");
-    this.nextFrame.src = "/?role=preview";
+    // Initial src is empty
     nextView.appendChild(nextLabel);
     nextView.appendChild(this.nextFrame);
     
@@ -100,20 +99,36 @@ export class PresenterUI {
   }
 
   public updateViews(currentIndex: number, totalSlides: number) {
-    // Update iframes hash
-    // We add a random query param to force update if hash doesn't trigger reload 
-    // but usually hash change is enough for our runtime.
-    
+    const baseUrl = "/?role=preview";
+
     // Update Current Slide
-    const currentUrl = new URL(this.currentFrame.src, window.location.origin);
-    currentUrl.hash = `#${currentIndex + 1}`;
-    this.currentFrame.src = currentUrl.toString();
+    const currentSrc = `${baseUrl}#${currentIndex + 1}`;
+    if (this.currentFrame.contentWindow && this.currentFrame.src.includes(baseUrl)) {
+        // If already loaded, just replace hash to avoid full reload flicker if possible
+        // But simply setting src with hash usually behaves like location.hash assignment 
+        // if path is same. To be safe/simple, we just set src.
+        // However, setting src to same value might reload. 
+        // We only update if changed?
+        const currentUrl = new URL(this.currentFrame.src, window.location.origin);
+        if (currentUrl.hash !== `#${currentIndex + 1}`) {
+             this.currentFrame.src = currentSrc;
+        }
+    } else {
+        this.currentFrame.src = currentSrc;
+    }
     
     // Update Next Slide
     const nextIndex = Math.min(currentIndex + 1, totalSlides - 1);
-    const nextUrl = new URL(this.nextFrame.src, window.location.origin);
-    nextUrl.hash = `#${nextIndex + 1}`;
-    this.nextFrame.src = nextUrl.toString();
+    const nextSrc = `${baseUrl}#${nextIndex + 1}`;
+    
+    if (this.nextFrame.contentWindow && this.nextFrame.src.includes(baseUrl)) {
+         const nextUrl = new URL(this.nextFrame.src, window.location.origin);
+         if (nextUrl.hash !== `#${nextIndex + 1}`) {
+             this.nextFrame.src = nextSrc;
+         }
+    } else {
+        this.nextFrame.src = nextSrc;
+    }
   }
   
   public updateNotes(notesHtml: string) {
