@@ -228,8 +228,6 @@
   margin-right: auto;
 }
 
-/* Utility to make an element visually cover its container but keep content readable.
-   Intent: use on overlays/backgrounds to reduce contrast under text. */
 .overlay-dim {
   background: rgba(0, 0, 0, 0.35);
   color: #fff;

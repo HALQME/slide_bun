@@ -7,6 +7,7 @@ import {
   styledParagraphExtension,
 } from "../core/extensions";
 import { getSlideFontSizeAttribute } from "../core/layout-design";
+import { HTMLMinifier } from "../utils/minifier";
 import type { Presentation, PresentationMeta } from "../types";
 
 // Constants
@@ -15,9 +16,13 @@ const DEFAULT_THEME = "default";
 
 export class HTMLRenderer {
   private markedInstance: Marked;
+  private minifier: HTMLMinifier;
+  private enableMinify: boolean;
 
-  constructor() {
+  constructor(options: { enableMinify?: boolean } = {}) {
+    this.enableMinify = options.enableMinify ?? false;
     this.markedInstance = this.createMarkedInstance();
+    this.minifier = new HTMLMinifier();
   }
 
   async generate(presentation: Presentation, runtimeScriptContent: string): Promise<string> {
@@ -74,13 +79,13 @@ export class HTMLRenderer {
     let resolvedCss = mainCss;
     const importPromises: Promise<{ original: string; content: string }>[] = [];
 
-    const matches: Array<{full: string, path: string}> = [];
+    const matches: Array<{ full: string; path: string }> = [];
     let match: RegExpExecArray | null;
     while ((match = importRegex.exec(mainCss)) !== null) {
       if (match[1]) {
         const importPath = match[1];
         const fullImportPath = `src/styles/${importPath}`;
-        
+
         // For theme imports, use the resolved theme
         const actualImportPath = importPath.includes("themes/default.css")
           ? `src/styles/themes/${themeToUse}.css`
@@ -88,12 +93,12 @@ export class HTMLRenderer {
 
         matches.push({
           full: match[0],
-          path: actualImportPath
+          path: actualImportPath,
         });
       }
     }
 
-    for (const {full, path} of matches) {
+    for (const { full, path } of matches) {
       importPromises.push(
         Bun.file(path)
           .text()
@@ -119,10 +124,10 @@ export class HTMLRenderer {
   }
 
   private renderSlides(slides: Presentation["slides"]): string {
-    return slides.map((slide) => this.renderSlide(slide)).join("\n");
+    return slides.map((slide, index) => this.renderSlide(slide, index === 0)).join("\n");
   }
 
-  private renderSlide(slide: Presentation["slides"][0]): string {
+  private renderSlide(slide: Presentation["slides"][0], isFirst: boolean = false): string {
     const contentHtml = this.markedInstance.parser(slide.contentTokens);
 
     // Render speaker notes if available
@@ -135,8 +140,11 @@ export class HTMLRenderer {
     const contentLength = slide.contentLength ?? 0;
     const fontSizeAttr = getSlideFontSizeAttribute(contentLength);
 
+    // Add active class to the first slide
+    const activeClass = isFirst ? " active" : "";
+
     return `
-    <section class="slide" id="slide-${slide.id}" data-id="${slide.id}" style="${fontSizeAttr}">
+    <section class="slide${activeClass}" id="slide-${slide.id}" data-id="${slide.id}" style="${fontSizeAttr}">
       ${contentHtml}
       ${notesHtml}
     </section>
@@ -149,44 +157,37 @@ export class HTMLRenderer {
     slidesHtml: string,
     runtimeScript: string,
   ): string {
-    // Calculate initial scale to prevent flicker on load
-    const initialScale = "1.0"; // Will be overridden by JS immediately, prevents flash
-    return `<!DOCTYPE html>
+    // Minify CSS assets
+    const minifiedMainCss = this.minifier.minifyCSS(assets.mainCss);
+    const minifiedPrintCss = this.minifier.minifyCSS(assets.printCss);
+
+    const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${config.title}</title>
-  <style>
-    /* Main CSS with all components bundled - Theme: ${assets.themeUsed} */
-    ${assets.mainCss}
-
-    /* Fixed slide container - JS will apply scaling */
-    #slide-container {
-      width: var(--slide-width, 1280px);
-      height: var(--slide-height, 720px);
-      margin: 0 auto;
-      position: relative;
-
-      /* transform: scale() is applied by JavaScript to prevent flicker */
-      transform-origin: center center;
-      transform: scale(${initialScale});
-    }
-
-    /* Print Styles */
-    ${assets.printCss}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${config.title}</title>
+<style>
+/* Theme: ${assets.themeUsed} */
+${minifiedMainCss}${minifiedPrintCss}
+</style>
 </head>
 <body>
-    <div class="slide-viewport">
-      <div id="slide-container">
-        ${slidesHtml}
-      </div>
-    </div>
-  <script>
-    ${runtimeScript}
-  </script>
+<div class="slide-viewport">
+<div id="slide-container">
+${slidesHtml}
+</div>
+</div>
+<script>
+${runtimeScript}
+</script>
 </body>
 </html>`;
+
+    // Always remove HTML comments (regardless of minify setting)
+    const simplifyed = this.minifier.removeComments(html).replace(/^(\s+|\t)/gm, "");
+
+    // Minify final HTML if enabled
+    return this.enableMinify ? this.minifier.minify(simplifyed) : simplifyed;
   }
 }

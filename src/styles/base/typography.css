@@ -1,6 +1,3 @@
-/* Typography and text styles */
-
-/* Typography - relative to slide font-size */
 h1,
 .h1 {
   font-size: 2.5em;
@@ -33,7 +30,6 @@ ol {
   line-height: var(--line-height);
 }
 
-/* Redefined styles for consistency */
 h2 {
   font-size: 2em;
   margin-bottom: var(--block-gap);

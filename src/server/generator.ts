@@ -4,8 +4,8 @@ import type { Presentation } from "../types";
 export class ServerHTMLGenerator {
   private renderer: HTMLRenderer;
 
-  constructor() {
-    this.renderer = new HTMLRenderer();
+  constructor(options: { enableMinify?: boolean } = {}) {
+    this.renderer = new HTMLRenderer({ enableMinify: options.enableMinify });
   }
 
   async generate(presentation: Presentation): Promise<string> {

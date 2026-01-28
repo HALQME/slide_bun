@@ -5,12 +5,14 @@ export interface CLIOptions {
   outputPath?: string;
   autoOpen: boolean;
   help: boolean;
+  minify?: boolean;
 }
 
 export function parseArguments(args: string[]): { inputPath: string; options: CLIOptions } {
   const options: CLIOptions = {
     autoOpen: false,
     help: false,
+    minify: false,
   };
 
   let inputPath = "";
@@ -34,6 +36,9 @@ export function parseArguments(args: string[]): { inputPath: string; options: CL
       case "-h":
       case "--help":
         options.help = true;
+        break;
+      case "--minify":
+        options.minify = true;
         break;
       default:
         if (!arg.startsWith("-") && !inputPath) {
@@ -66,6 +71,7 @@ Commands:
 Options:
   -o, --output <path>    Set output file path (default: <input>.html)
   --auto-open            Open generated HTML in default browser
+  --minify               Minify HTML and CSS for smaller file size
   -v, --version          Show version number
   -h, --help             Show this help message
 

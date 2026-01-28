@@ -1,7 +1,3 @@
-/* CSS Custom Properties (Variables) Definition
-   These variables define the design tokens used throughout the application.
-   Each theme should provide values for these variables. */
-
 :root {
   /* === Color Variables === */
   --c-fg: var(--theme-fg, #1a1a1a); /* Primary text color */
