@@ -106,8 +106,7 @@ body {
 .slide video,
 .slide iframe {
   max-width: 100%;
-  /* Constrain to slide design height minus padding (720px - 8em) */
-  max-height: calc(720px - (2 * var(--slide-padding)));
+  max-height: 100%;
   height: auto;
   object-fit: contain;
   display: block;
@@ -210,7 +209,9 @@ pre code {
   display: flex;
   gap: var(--col-gap);
   margin-top: var(--col-gap);
-  align-items: flex-start; /* Prevent stretching images to match text column height */
+  flex: 1; /* Fill remaining vertical space */
+  min-height: 0;
+  align-items: center; /* Vertically center content */
   width: 100%;
   box-sizing: border-box;
 }
@@ -219,7 +220,10 @@ pre code {
 .columns .col {
   flex: 1 1 0;
   min-width: 0; /* allow children to shrink properly */
-  min-height: 0; /* allow children to shrink vertically properly */
+  height: 100%; /* Fill column height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   box-sizing: border-box;
 }
 
@@ -228,8 +232,7 @@ pre code {
 .columns .col video,
 .columns .col iframe {
   max-width: 100%;
-  /* Same constraint as main images to prevent column blow-out */
-  max-height: calc(720px - (2 * var(--slide-padding)));
+  max-height: 100%;
   height: auto;
   display: block;
 }
