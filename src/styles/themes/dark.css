@@ -1,12 +1,12 @@
-/* Default Theme Values
-   This theme provides values for all CSS custom properties defined in variables.css */
+/* Dark Theme Values
+   This theme provides dark mode values for all CSS custom properties defined in variables.css */
 
 :root {
   /* === Theme Color Values === */
-  --theme-fg: #1a1a1a;
-  --theme-bg: #ffffff;
-  --theme-accent: #0055ff;
-  --theme-dim: #888888;
+  --theme-fg: #e0e0e0;
+  --theme-bg: #1a1a1a;
+  --theme-accent: #66a6ff;
+  --theme-dim: #a0a0a0;
   --theme-backdrop: #000000;
 
   /* === Theme Typography Values === */

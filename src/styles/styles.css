@@ -1,0 +1,17 @@
+/* Main CSS file that imports all style components */
+/* This order is important: variables must be defined first */
+
+/* CSS Variables Definition */
+@import url("themes/variables.css");
+
+/* Theme-specific values */
+@import url("themes/default.css");
+
+/* Base styles */
+@import url("base/reset.css");
+@import url("base/layout.css");
+@import url("base/typography.css");
+@import url("base/components.css");
+
+/* Utility classes */
+@import url("utilities.css");

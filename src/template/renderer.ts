@@ -52,26 +52,69 @@ export class HTMLRenderer {
   }
 
   private async loadAssets(theme: string) {
-    // Load theme CSS with fallback
-    let themeCss: string;
+    // Load main CSS file and resolve @imports server-side
+    let mainCss: string;
     try {
-      const themeModule = await Bun.file(`src/styles/themes/${theme}.css`).text();
-      themeCss = themeModule;
+      mainCss = await Bun.file("src/styles/styles.css").text();
     } catch {
-      console.warn(`Theme "${theme}" not found, falling back to ${DEFAULT_THEME}`);
-      themeCss = await Bun.file(`src/styles/themes/${DEFAULT_THEME}.css`).text();
+      throw new Error("Main CSS file not found: src/styles/styles.css");
     }
 
-    // Load other assets
-    const [utilitiesCss, printCss] = await Promise.all([
-      Bun.file("src/styles/utilities.css").text(),
-      Bun.file("src/styles/print.css").text(),
-    ]);
+    // Check if the requested theme exists
+    let themeToUse = theme;
+    try {
+      await Bun.file(`src/styles/themes/${theme}.css`).text();
+    } catch {
+      console.warn(`Theme "${theme}" not found, falling back to ${DEFAULT_THEME}`);
+      themeToUse = DEFAULT_THEME;
+    }
+
+    // Resolve @import statements by reading the files and replacing them
+    const importRegex = /@import url\("([^"]+)"\);/g;
+    let resolvedCss = mainCss;
+    const importPromises: Promise<{ original: string; content: string }>[] = [];
+
+    const matches: Array<{full: string, path: string}> = [];
+    let match: RegExpExecArray | null;
+    while ((match = importRegex.exec(mainCss)) !== null) {
+      if (match[1]) {
+        const importPath = match[1];
+        const fullImportPath = `src/styles/${importPath}`;
+        
+        // For theme imports, use the resolved theme
+        const actualImportPath = importPath.includes("themes/default.css")
+          ? `src/styles/themes/${themeToUse}.css`
+          : fullImportPath;
+
+        matches.push({
+          full: match[0],
+          path: actualImportPath
+        });
+      }
+    }
+
+    for (const {full, path} of matches) {
+      importPromises.push(
+        Bun.file(path)
+          .text()
+          .then((content) => {
+            return { original: full, content };
+          }),
+      );
+    }
+
+    const resolvedImports = await Promise.all(importPromises);
+    for (const resolved of resolvedImports) {
+      resolvedCss = resolvedCss.replace(resolved.original, resolved.content);
+    }
+
+    // Load print styles separately
+    const printCss = await Bun.file("src/styles/print.css").text();
 
     return {
-      themeCss,
-      utilitiesCss,
+      mainCss: resolvedCss,
       printCss,
+      themeUsed: themeToUse,
     };
   }
 
@@ -115,13 +158,13 @@ export class HTMLRenderer {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${config.title}</title>
   <style>
-    /* Theme: ${config.theme} */
-    ${assets.themeCss}
+    /* Main CSS with all components bundled - Theme: ${assets.themeUsed} */
+    ${assets.mainCss}
 
     /* Fixed slide container - JS will apply scaling */
     #slide-container {
-      width: 1280px;
-      height: 720px;
+      width: var(--slide-width, 1280px);
+      height: var(--slide-height, 720px);
       margin: 0 auto;
       position: relative;
 
@@ -129,14 +172,6 @@ export class HTMLRenderer {
       transform-origin: center center;
       transform: scale(${initialScale});
     }
-
-    /* Slides get font-size directly from content-based calculation */
-    .slide {
-      /* font-size is set inline based on content density */
-    }
-
-    /* Utilities */
-    ${assets.utilitiesCss}
 
     /* Print Styles */
     ${assets.printCss}

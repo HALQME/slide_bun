@@ -1,0 +1,33 @@
+/* Reset and base styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-base);
+  /* Set base font size for rem/em calculations */
+  font-size: 16px;
+  color: var(--c-fg);
+  background: var(--c-backdrop);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Hide all slides except the first one by default (for no-JS fallback) */
+.slide:not(:first-child) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* When JS is active, .active controls visibility */
+.js-active .slide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.js-active .slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}

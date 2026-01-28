@@ -1,0 +1,108 @@
+/* Layout and positioning styles */
+
+/* Viewport wrapper for slide container */
+.slide-viewport {
+  /* Container maintains fixed size, JS handles scaling */
+  width: var(--slide-width, 1280px);
+  height: var(--slide-height, 720px);
+  margin: 0 auto;
+  position: relative;
+}
+
+#slide-container {
+  /* Keep the container at design size - JS will apply scale */
+  width: var(--slide-width, 1280px);
+  height: var(--slide-height, 720px);
+  position: relative;
+  background: var(--c-bg);
+  overflow: hidden;
+  margin: 0 auto;
+  transform-origin: center center;
+  /* transform: scale() is applied by JavaScript to prevent flicker */
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  /* Fill the container (container provides the responsive size) */
+  width: 100%;
+  height: 100%;
+
+  padding: var(--slide-padding);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0; /* Important for flex container to allow children shrinking */
+  opacity: 1;
+  pointer-events: auto;
+
+  /* Font-size: base 16px × per-slide font scale × text scale */
+  /* font-size is set inline based on content density */
+
+  /* Text scale for dynamic adjustment */
+  font-size: calc(var(--font-size-base, 16px) * var(--text-scale, 1));
+}
+
+/* Media constraints: images/videos/iframes fit within slide bounds */
+.slide img,
+.slide video,
+.slide iframe {
+  max-width: 100%;
+  max-height: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 0;
+}
+
+/* Slide with background image should have different padding behavior */
+.slide.has-background {
+  padding: 0;
+  justify-content: center;
+}
+
+.slide.has-background > * {
+  padding: var(--slide-padding);
+  max-width: calc(100% - 2 * var(--slide-padding));
+}
+
+/* Two-column / column layout support
+   Usage in markdown/template: wrap content in a container with class "columns"
+   and place two children with class "col" to get a responsive two-column layout. */
+.columns {
+  display: flex;
+  gap: var(--col-gap);
+  margin-top: var(--col-gap);
+  flex: 1; /* Fill remaining vertical space */
+  min-height: 0;
+  align-items: flex-start; /* Align content to top */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Each column takes equal width and prevents overflow */
+.columns .col {
+  flex: 1 1 0;
+  min-width: 0; /* allow children to shrink properly */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+/* Ensure images and pre/code inside columns behave responsively */
+.columns .col img,
+.columns .col video,
+.columns .col iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.columns .col pre {
+  max-width: 100%;
+  overflow: auto;
+}

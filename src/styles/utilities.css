@@ -234,18 +234,3 @@
   background: rgba(0, 0, 0, 0.35);
   color: #fff;
 }
-
-@media (max-width: 640px) {
-  .mark {
-    padding: 0.04em 0.12em;
-    border-radius: 2px;
-  }
-}
-
-/* Responsive adjustments for tablets */
-@media (max-width: 768px) {
-  .mark {
-    padding: 0.04em 0.12em;
-    border-radius: 2px;
-  }
-}

@@ -5,26 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>機能網羅デモ</title>
   <style>
-    /* Theme: default */
-    :root {
-  /* Colors */
-  --c-fg: #1a1a1a;
-  --c-bg: #ffffff;
-  --c-accent: #0055ff;
-  --c-dim: #888888;
-  --c-backdrop: #000000;
+    /* Main CSS with all components bundled - Theme: default */
+    /* Main CSS file that imports all style components */
+/* This order is important: variables must be defined first */
 
-  /* Typography */
-  --font-base: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-code: "Fira Code", monospace;
+/* CSS Variables Definition */
+/* CSS Custom Properties (Variables) Definition
+   These variables define the design tokens used throughout the application.
+   Each theme should provide values for these variables. */
 
-  /* Spacing (em-based, relative to base font size) */
-  --slide-padding: 4em;
-  --block-gap: 0.2em;
-  --col-gap: 0.5em;
-  --line-height: 1.4;
+:root {
+  /* === Color Variables === */
+  --c-fg: var(--theme-fg, #1a1a1a); /* Primary text color */
+  --c-bg: var(--theme-bg, #ffffff); /* Background color */
+  --c-accent: var(--theme-accent, #0055ff); /* Accent/highlight color */
+  --c-dim: var(--theme-dim, #888888); /* Dimmed/subtle text */
+  --c-backdrop: var(--theme-backdrop, #000000); /* Backdrop/background */
+
+  /* === Typography Variables === */
+  --font-base: var(--theme-font-base, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  --font-code: var(--theme-font-code, "Fira Code", monospace);
+
+  /* === Spacing Variables (em-based, relative to base font size) === */
+  --slide-padding: var(--theme-slide-padding, 4em);
+  --block-gap: var(--theme-block-gap, 0.2em);
+  --col-gap: var(--theme-col-gap, 0.5em);
+  --line-height: var(--theme-line-height, 1.4);
+
+  /* === Layout Variables === */
+  --slide-width: var(--theme-slide-width, 1280px);
+  --slide-height: var(--theme-slide-height, 720px);
 }
 
+
+/* Theme-specific values */
+/* Default Theme Values
+   This theme provides values for all CSS custom properties defined in variables.css */
+
+:root {
+  /* === Theme Color Values === */
+  --theme-fg: #1a1a1a;
+  --theme-bg: #ffffff;
+  --theme-accent: #0055ff;
+  --theme-dim: #888888;
+  --theme-backdrop: #000000;
+
+  /* === Theme Typography Values === */
+  --theme-font-base: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --theme-font-code: "Fira Code", monospace;
+
+  /* === Theme Spacing Values === */
+  --theme-slide-padding: 4em;
+  --theme-block-gap: 0.2em;
+  --theme-col-gap: 0.5em;
+  --theme-line-height: 1.4;
+
+  /* === Theme Layout Values === */
+  --theme-slide-width: 1280px;
+  --theme-slide-height: 720px;
+}
+
+
+/* Base styles */
+/* Reset and base styles */
 body {
   margin: 0;
   padding: 0;
@@ -40,19 +83,39 @@ body {
   height: 100vh;
 }
 
+/* Hide all slides except the first one by default (for no-JS fallback) */
+.slide:not(:first-child) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* When JS is active, .active controls visibility */
+.js-active .slide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.js-active .slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+/* Layout and positioning styles */
+
 /* Viewport wrapper for slide container */
 .slide-viewport {
   /* Container maintains fixed size, JS handles scaling */
-  width: 1280px;
-  height: 720px;
+  width: var(--slide-width, 1280px);
+  height: var(--slide-height, 720px);
   margin: 0 auto;
   position: relative;
 }
 
 #slide-container {
   /* Keep the container at design size - JS will apply scale */
-  width: 1280px;
-  height: 720px;
+  width: var(--slide-width, 1280px);
+  height: var(--slide-height, 720px);
   position: relative;
   background: var(--c-bg);
   overflow: hidden;
@@ -109,23 +172,45 @@ body {
   max-width: calc(100% - 2 * var(--slide-padding));
 }
 
-/* Hide all slides except the first one by default (for no-JS fallback) */
-.slide:not(:first-child) {
-  opacity: 0;
-  pointer-events: none;
+/* Two-column / column layout support
+   Usage in markdown/template: wrap content in a container with class "columns"
+   and place two children with class "col" to get a responsive two-column layout. */
+.columns {
+  display: flex;
+  gap: var(--col-gap);
+  margin-top: var(--col-gap);
+  flex: 1; /* Fill remaining vertical space */
+  min-height: 0;
+  align-items: flex-start; /* Align content to top */
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* When JS is active, .active controls visibility */
-.js-active .slide {
-  opacity: 0;
-  pointer-events: none;
+/* Each column takes equal width and prevents overflow */
+.columns .col {
+  flex: 1 1 0;
+  min-width: 0; /* allow children to shrink properly */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-sizing: border-box;
 }
 
-.js-active .slide.active {
-  opacity: 1;
-  pointer-events: auto;
-  z-index: 1;
+/* Ensure images and pre/code inside columns behave responsively */
+.columns .col img,
+.columns .col video,
+.columns .col iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
+
+.columns .col pre {
+  max-width: 100%;
+  overflow: auto;
+}
+
+/* Typography and text styles */
 
 /* Typography - relative to slide font-size */
 h1,
@@ -160,6 +245,7 @@ ol {
   line-height: var(--line-height);
 }
 
+/* Redefined styles for consistency */
 h2 {
   font-size: 2em;
   margin-bottom: var(--block-gap);
@@ -212,64 +298,10 @@ pre code {
   font-size: 0.8em;
 }
 
-/* Two-column / column layout support
-   Usage in markdown/template: wrap content in a container with class "columns"
-   and place two children with class "col" to get a responsive two-column layout. */
-.columns {
-  display: flex;
-  gap: var(--col-gap);
-  margin-top: var(--col-gap);
-  flex: 1; /* Fill remaining vertical space */
-  min-height: 0;
-  align-items: flex-start; /* Align content to top */
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Each column takes equal width and prevents overflow */
-.columns .col {
-  flex: 1 1 0;
-  min-width: 0; /* allow children to shrink properly */
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  box-sizing: border-box;
-}
-
-/* Ensure images and pre/code inside columns behave responsively */
-.columns .col img,
-.columns .col video,
-.columns .col iframe {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-.columns .col pre {
-  max-width: 100%;
-  overflow: auto;
-}
 
 
-    /* Fixed slide container - JS will apply scaling */
-    #slide-container {
-      width: 1280px;
-      height: 720px;
-      margin: 0 auto;
-      position: relative;
-
-      /* transform: scale() is applied by JavaScript to prevent flicker */
-      transform-origin: center center;
-      transform: scale(1.0);
-    }
-
-    /* Slides get font-size directly from content-based calculation */
-    .slide {
-      /* font-size is set inline based on content density */
-    }
-
-    /* Utilities */
-    .center {
+/* Utility classes */
+.center {
   text-align: center;
   margin-left: auto;
   margin-right: auto;
@@ -506,21 +538,19 @@ pre code {
   color: #fff;
 }
 
-@media (max-width: 640px) {
-  .mark {
-    padding: 0.04em 0.12em;
-    border-radius: 2px;
-  }
-}
 
-/* Responsive adjustments for tablets */
-@media (max-width: 768px) {
-  .mark {
-    padding: 0.04em 0.12em;
-    border-radius: 2px;
-  }
-}
 
+    /* Fixed slide container - JS will apply scaling */
+    #slide-container {
+      width: var(--slide-width, 1280px);
+      height: var(--slide-height, 720px);
+      margin: 0 auto;
+      position: relative;
+
+      /* transform: scale() is applied by JavaScript to prevent flicker */
+      transform-origin: center center;
+      transform: scale(1.0);
+    }
 
     /* Print Styles */
     @media print {
@@ -660,6 +690,30 @@ console.log(hello);
 <li><code>::: speaker</code> ブロックで記述</li>
 </ul>
 </div>
+    </section>
+<section class="slide" id="slide-9" data-id="9" style="font-size: 32px">
+      <h2>テーブル要素</h2>
+<table>
+<thead>
+<tr>
+<th>ヘッダー1</th>
+<th>ヘッダー2</th>
+<th>ヘッダー3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>データ1</td>
+<td>データ2</td>
+<td>データ3</td>
+</tr>
+<tr>
+<td>データ4</td>
+<td>データ5</td>
+<td>データ6</td>
+</tr>
+</tbody></table>
+
+      
     </section>
       </div>
     </div>
