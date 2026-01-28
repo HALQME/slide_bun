@@ -43,21 +43,6 @@ export class SlideNavigator {
     // Clamp index
     const targetIndex = Math.max(0, Math.min(index, this.totalSlides - 1));
 
-    // If already there and active, only recompute scale but skip class toggling
-    const isAlreadyActive = this.slides[targetIndex]?.classList.contains("active");
-    if (this.currentSlideIndex === targetIndex && isAlreadyActive) {
-      const target = this.slides[targetIndex];
-      if (target) {
-        try {
-          const preScale = this.computeScaleForSlide(target);
-          target.style.setProperty("--text-scale", String(Number(preScale.toFixed(3))));
-        } catch (e) {
-          console.warn("Failed to compute scale for slide:", e);
-        }
-      }
-      return;
-    }
-
     // Precompute scale for target
     const target = this.slides[targetIndex];
     if (target) {
