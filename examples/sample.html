@@ -597,6 +597,9 @@ pre code {
 <p>全ての機能を詰め込んだデモ・スライドです。</p>
 <p class="caption right">Created by Slide Bun</p>
 
+      <div class="speaker-notes" hidden><p>ここからデモ開始。
+まずはタイトルのインパクトを強調。</p>
+</div>
     </section>
 <section class="slide layout-default" id="slide-2" data-id="2" style="--slide-font-scale: 1">
       <h2>基本的なタイポグラフィ</h2>
@@ -611,6 +614,8 @@ pre code {
 <li>もサポート</li>
 </ol>
 
+      <div class="speaker-notes" hidden><p>基本機能の紹介。</p>
+</div>
     </section>
 <section class="slide layout-default" id="slide-3" data-id="3" style="--slide-font-scale: 1">
       <h2 class="center">2カラムレイアウト</h2>
@@ -628,6 +633,7 @@ console.log(hello);
 </code></pre>
 </div></div><p class="bottom">この行はカラムレイアウトの影響を受けません。</p>
 
+      
     </section>
 <section class="slide layout-default" id="slide-4" data-id="4" style="--slide-font-scale: 1.2">
       <h2 class="center">画像の最適化 (Fit)</h2>
@@ -635,12 +641,14 @@ console.log(hello);
 <p class="fit"><img src="https://placehold.co/600x400" alt="Placeholder"></p>
 <p class="caption">図1: プレースホルダー画像</p>
 
+      
     </section>
 <section class="slide layout-default" id="slide-5" data-id="5" style="--slide-font-scale: 1">
       <h3>テキストユーティリティの例（ハイライト・枠）</h3>
 <p>テキストの意図（注目・枠付け）を示すためのユーティリティも使えます。<br>インラインで強調したい語句には <code>[...]</code> とクラスを併用します（例: <code>[重要]{.mark}</code>）。</p>
 <p>この段落では <span class="mark">重要</span> な語句をハイライトして表示します。</p>
 
+      
     </section>
 <section class="slide layout-default" id="slide-6" data-id="6" style="--slide-font-scale: 1">
       <h3>画像ユーティリティの例（数値指定）</h3>
@@ -652,6 +660,7 @@ console.log(hello);
 </div><div class="slide-container col"><p class="fit"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted"></p>
 <p class="caption">図3: フィルター無しの画像</p>
 </div></div>
+      
     </section>
 <section class="slide layout-default" id="slide-7" data-id="7" style="--slide-font-scale: 1.2">
       <h2>背景画像 (Cover)</h2>
@@ -664,161 +673,22 @@ console.log(hello);
 
 <p class="center"><strong>背景の上に文字を書く</strong>ことも可能です。</p>
 
+      
     </section>
 <section class="slide layout-default" id="slide-8" data-id="8" style="--slide-font-scale: 1.2">
       <h2>スピーカーノート</h2>
 <p>このスライドにはスピーカーノートがあります。<br>(画面には表示されません)</p>
 
+      <div class="speaker-notes" hidden><ul>
+<li>プレゼンターにしか見えないメモ</li>
+<li>カンペとして利用可能</li>
+<li><code>::: speaker</code> ブロックで記述</li>
+</ul>
+</div>
     </section>
   </div>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-  document.body.classList.add("js-active");
-  let currentSlideIndex = 0;
-  const slides = document.querySelectorAll(".slide");
-  const totalSlides = slides.length;
-  if (totalSlides === 0)
-    return;
-  function computeScaleForSlide(slide, minScale = 0.6) {
-    const container = document.getElementById("slide-container");
-    const containerHeight = container ? container.clientHeight : window.innerHeight;
-    const cs = window.getComputedStyle(slide);
-    const paddingTop = parseFloat(cs.paddingTop || "0") || 0;
-    const paddingBottom = parseFloat(cs.paddingBottom || "0") || 0;
-    const availableHeight = Math.max(0, containerHeight - (paddingTop + paddingBottom));
-    const contentHeight = Math.max(0, (slide.scrollHeight || 0) - (paddingTop + paddingBottom));
-    if (!contentHeight || contentHeight <= availableHeight)
-      return 1;
-    const raw = availableHeight / contentHeight;
-    return Math.max(minScale, Math.min(1, raw));
-  }
-  function applyScaleToSlide(slide) {
-    const scale = computeScaleForSlide(slide);
-    slide.style.setProperty("--text-scale", String(Number(scale.toFixed(3))));
-  }
-  function clearScaleFromSlide(slide) {
-    slide.style.removeProperty("--text-scale");
-  }
-  function showSlide(index) {
-    const target = slides[index];
-    if (target) {
-      const preScale = computeScaleForSlide(target);
-      target.style.setProperty("--text-scale", String(Number(preScale.toFixed(3))));
-    }
-    slides.forEach((slide, i) => {
-      const isActive = i === index;
-      if (isActive) {
-        slide.classList.add("active");
-        scheduleRecompute(40);
-        const imgs = Array.from(slide.querySelectorAll("img"));
-        imgs.forEach((img) => {
-          if (!img.complete) {
-            const onLoad = () => {
-              scheduleRecompute();
-              img.removeEventListener("load", onLoad);
-            };
-            img.addEventListener("load", onLoad);
-          }
-        });
-        if (document.fonts && document.fonts.ready) {
-          document.fonts.ready.then(() => {
-            scheduleRecompute();
-          }).catch(() => {});
-        }
-      } else {
-        if (slide.classList.contains("active")) {
-          let cleared = false;
-          const onTrans = (e) => {
-            if (e.propertyName === "opacity") {
-              if (!cleared) {
-                clearScaleFromSlide(slide);
-                cleared = true;
-              }
-              slide.removeEventListener("transitionend", onTrans);
-            }
-          };
-          slide.addEventListener("transitionend", onTrans);
-          const fallback = window.setTimeout(() => {
-            if (!cleared)
-              clearScaleFromSlide(slide);
-            try {
-              slide.removeEventListener("transitionend", onTrans);
-            } catch {}
-            clearTimeout(fallback);
-          }, 350);
-        } else {
-          clearScaleFromSlide(slide);
-        }
-        slide.classList.remove("active");
-      }
-    });
-    currentSlideIndex = index;
-    window.location.hash = `#${index + 1}`;
-  }
-  function nextSlide() {
-    if (currentSlideIndex < totalSlides - 1) {
-      showSlide(currentSlideIndex + 1);
-    }
-  }
-  function prevSlide() {
-    if (currentSlideIndex > 0) {
-      showSlide(currentSlideIndex - 1);
-    }
-  }
-  let recomputeTimeout = null;
-  function scheduleRecompute(delay = 80) {
-    if (recomputeTimeout !== null) {
-      window.clearTimeout(recomputeTimeout);
-    }
-    recomputeTimeout = window.setTimeout(() => {
-      const active = slides[currentSlideIndex];
-      if (active)
-        applyScaleToSlide(active);
-      recomputeTimeout = null;
-    }, delay);
-  }
-  window.addEventListener("resize", () => {
-    scheduleRecompute(80);
-  });
-  window.addEventListener("orientationchange", () => {
-    scheduleRecompute(120);
-  });
-  document.addEventListener("keydown", (e) => {
-    switch (e.key) {
-      case "ArrowRight":
-      case "Space":
-      case "Enter":
-      case "n":
-        if (e.key === "Space")
-          e.preventDefault();
-        nextSlide();
-        break;
-      case "ArrowLeft":
-      case "p":
-        prevSlide();
-        break;
-      case "Home":
-        showSlide(0);
-        break;
-      case "End":
-        showSlide(totalSlides - 1);
-        break;
-    }
-  });
-  function handleHash() {
-    const hash = window.location.hash.substring(1);
-    const index = parseInt(hash, 10);
-    if (!isNaN(index) && index >= 1 && index <= totalSlides) {
-      showSlide(index - 1);
-    }
-  }
-  if (window.location.hash) {
-    handleHash();
-  } else {
-    showSlide(0);
-  }
-  window.addEventListener("hashchange", handleHash);
-});
+    class v{slides;currentSlideIndex=0;container;minScale;recomputeTimeout=null;onSlideChange;constructor(w={}){let f=w.slideSelector||".slide";this.slides=Array.from(document.querySelectorAll(f)),this.container=document.getElementById(w.containerId||"slide-container"),this.minScale=w.minScale||0.6,this.onSlideChange=w.onSlideChange,document.body.classList.add("js-active"),this.handleResize=this.handleResize.bind(this),this.handleOrientation=this.handleOrientation.bind(this),window.addEventListener("resize",this.handleResize),window.addEventListener("orientationchange",this.handleOrientation)}get totalSlides(){return this.slides.length}get currentIndex(){return this.currentSlideIndex}destroy(){window.removeEventListener("resize",this.handleResize),window.removeEventListener("orientationchange",this.handleOrientation)}goTo(w,f=!1){if(this.slides.length===0)return;let E=Math.max(0,Math.min(w,this.totalSlides-1)),u=this.slides[E];if(u){let h=this.computeScaleForSlide(u);u.style.setProperty("--text-scale",String(Number(h.toFixed(3))))}this.slides.forEach((h,c)=>{if(c===E){if(h.classList.add("active"),this.scheduleRecompute(40),Array.from(h.querySelectorAll("img")).forEach((S)=>{if(!S.complete){let N=()=>{this.scheduleRecompute(),S.removeEventListener("load",N)};S.addEventListener("load",N)}}),document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{this.scheduleRecompute()}).catch(()=>{})}else{if(h.classList.contains("active")){let L=!1,S=(D)=>{if(D.propertyName==="opacity"){if(!L)this.clearScaleFromSlide(h),L=!0;h.removeEventListener("transitionend",S)}};h.addEventListener("transitionend",S);let N=window.setTimeout(()=>{if(!L)this.clearScaleFromSlide(h);try{h.removeEventListener("transitionend",S)}catch{}clearTimeout(N)},350)}else this.clearScaleFromSlide(h);h.classList.remove("active")}});let k=this.currentSlideIndex;if(this.currentSlideIndex=E,!f&&this.onSlideChange&&k!==E)this.onSlideChange(E)}next(){if(this.currentSlideIndex<this.totalSlides-1)this.goTo(this.currentSlideIndex+1)}prev(){if(this.currentSlideIndex>0)this.goTo(this.currentSlideIndex-1)}computeScaleForSlide(w){let f=this.container?this.container.clientHeight:window.innerHeight,E=window.getComputedStyle(w),u=parseFloat(E.paddingTop||"0")||0,k=parseFloat(E.paddingBottom||"0")||0,h=Math.max(0,f-(u+k)),c=Math.max(0,(w.scrollHeight||0)-(u+k));if(!c||c<=h)return 1;let A=h/c;return Math.max(this.minScale,Math.min(1,A))}applyScaleToSlide(w){let f=this.computeScaleForSlide(w);w.style.setProperty("--text-scale",String(Number(f.toFixed(3))))}clearScaleFromSlide(w){w.style.removeProperty("--text-scale")}scheduleRecompute(w=80){if(this.recomputeTimeout!==null)window.clearTimeout(this.recomputeTimeout);this.recomputeTimeout=window.setTimeout(()=>{let f=this.slides[this.currentSlideIndex];if(f)this.applyScaleToSlide(f);this.recomputeTimeout=null},w)}handleResize(){this.scheduleRecompute(80)}handleOrientation(){this.scheduleRecompute(120)}}document.addEventListener("DOMContentLoaded",()=>{let w=new v;function f(){window.location.hash=`#${w.currentIndex+1}`}function E(){let u=window.location.hash.substring(1),k=parseInt(u,10);if(!isNaN(k)&&k>=1&&k<=w.totalSlides){if(k-1!==w.currentIndex)w.goTo(k-1)}}if(document.addEventListener("keydown",(u)=>{switch(u.key){case"ArrowRight":case"Space":case"Enter":case"n":if(u.key==="Space")u.preventDefault();w.next(),f();break;case"ArrowLeft":case"p":w.prev(),f();break;case"Home":w.goTo(0),f();break;case"End":w.goTo(w.totalSlides-1),f();break}}),window.location.hash)E();else w.goTo(0),f();window.addEventListener("hashchange",E)});
 
   </script>
 </body>

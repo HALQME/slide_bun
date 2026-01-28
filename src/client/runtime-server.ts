@@ -2,14 +2,22 @@ import { SlideNavigator } from "./core/navigator";
 import { PresenterUI } from "./presenter/ui";
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Check for preview role
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPreview = urlParams.get('role') === 'preview';
+
   // Sync setup
-  const channel = new BroadcastChannel("slide-bun-sync");
+  // If preview, we don't sync. Otherwise we join the channel.
+  const channel = isPreview ? null : new BroadcastChannel("slide-bun-sync");
   
   // Determine if we are in presenter mode
   const isPresenter = window.location.pathname === "/presenter";
   
   if (isPresenter) {
-    setupPresenterMode(channel);
+    // Presenter mode requires channel to control others (unless it's a preview of a presenter?? unlikely)
+    if (channel) {
+        setupPresenterMode(channel);
+    }
   } else {
     setupClientMode(channel);
   }
@@ -23,11 +31,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 });
 
-function setupClientMode(channel: BroadcastChannel) {
+function setupClientMode(channel: BroadcastChannel | null) {
   const navigator = new SlideNavigator({
     onSlideChange: (index) => {
-      // Broadcast change
-      channel.postMessage({ type: "navigate", index });
+      // Broadcast change only if channel exists
+      if (channel) {
+        channel.postMessage({ type: "navigate", index });
+      }
       updateHash(index);
     },
   });
@@ -37,16 +47,18 @@ function setupClientMode(channel: BroadcastChannel) {
   }
 
   // Listen for sync events
-  channel.onmessage = (event) => {
-    if (event.data && event.data.type === "navigate") {
-      const index = event.data.index;
-      if (typeof index === "number" && index !== navigator.currentIndex) {
-        // Go to slide but suppress callback to avoid loop
-        navigator.goTo(index, true);
-        updateHash(index);
-      }
-    }
-  };
+  if (channel) {
+      channel.onmessage = (event) => {
+        if (event.data && event.data.type === "navigate") {
+          const index = event.data.index;
+          if (typeof index === "number" && index !== navigator.currentIndex) {
+            // Go to slide but suppress callback to avoid loop
+            navigator.goTo(index, true);
+            updateHash(index);
+          }
+        }
+      };
+  }
 
   // Handle hash changes
   function handleHash() {

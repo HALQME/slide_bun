@@ -54,9 +54,8 @@ export class PresenterUI {
     const currentView = document.createElement("div");
     currentView.id = "presenter-current";
     this.currentFrame = document.createElement("iframe");
-    // Append ?view=embedded to avoid recursion if we had logic for that, 
-    // but here we just load root.
-    this.currentFrame.src = "/"; 
+    // Use role=preview to disable sync in the iframe
+    this.currentFrame.src = "/?role=preview"; 
     currentView.appendChild(this.currentFrame);
     
     // Next Slide
@@ -66,7 +65,7 @@ export class PresenterUI {
     nextLabel.className = "label";
     nextLabel.textContent = "NEXT SLIDE";
     this.nextFrame = document.createElement("iframe");
-    this.nextFrame.src = "/";
+    this.nextFrame.src = "/?role=preview";
     nextView.appendChild(nextLabel);
     nextView.appendChild(this.nextFrame);
     
@@ -104,19 +103,17 @@ export class PresenterUI {
     // Update iframes hash
     // We add a random query param to force update if hash doesn't trigger reload 
     // but usually hash change is enough for our runtime.
-    const currentUrl = new URL(this.currentFrame.src);
+    
+    // Update Current Slide
+    const currentUrl = new URL(this.currentFrame.src, window.location.origin);
     currentUrl.hash = `#${currentIndex + 1}`;
     this.currentFrame.src = currentUrl.toString();
     
+    // Update Next Slide
     const nextIndex = Math.min(currentIndex + 1, totalSlides - 1);
-    const nextUrl = new URL(this.nextFrame.src);
+    const nextUrl = new URL(this.nextFrame.src, window.location.origin);
     nextUrl.hash = `#${nextIndex + 1}`;
     this.nextFrame.src = nextUrl.toString();
-
-    // Notes are tricky because they are in the original document, which we wiped.
-    // However, in runtime-server.ts, we should have extracted them before wiping.
-    // Or, we can fetch them from the currentFrame content once it loads?
-    // Better: runtime-server passed the notes data to us.
   }
   
   public updateNotes(notesHtml: string) {
