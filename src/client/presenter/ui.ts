@@ -15,6 +15,12 @@ export class PresenterUI {
   constructor() {
     this.container = document.createElement("div");
     this.container.id = "presenter-dashboard";
+    this.container.tabIndex = -1; // Allow focus programmatically
+    
+    // Ensure clicking anywhere keeps focus on the dashboard for shortcuts
+    this.container.onclick = () => {
+        this.container.focus();
+    };
     
     // Header
     const header = document.createElement("div");
@@ -89,6 +95,9 @@ export class PresenterUI {
     
     this.startClock();
     this.startTimer();
+    
+    // Focus to capture keyboard events immediately
+    this.container.focus();
   }
 
   public updateViews(currentIndex: number, totalSlides: number) {

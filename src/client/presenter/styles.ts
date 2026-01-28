@@ -1,5 +1,6 @@
 export const presenterStyles = `
 body.mode-presenter {
+  display: block; /* Reset flex from default theme */
   margin: 0;
   padding: 0;
   height: 100vh;
@@ -15,9 +16,11 @@ body.mode-presenter {
   grid-template-columns: 1fr 350px;
   grid-template-rows: 60px 1fr 1fr;
   height: 100vh;
+  width: 100vw;
   gap: 16px;
   padding: 16px;
   box-sizing: border-box;
+  outline: none; /* We focus this programmatically, avoid ring */
 }
 
 /* Header: Timer and Clock */
