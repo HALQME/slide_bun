@@ -14,7 +14,7 @@ export class ServerHTMLGenerator {
   async generate(
     presentation: Presentation,
   ): Promise<
-    string | { html: string; assets: { mainCss: string; printCss: string; themeUsed: string } }
+    string | { html: string; assets: { mainCss: string; printCss: string; themeCss: string } }
   > {
     const buildResult = await Bun.build({
       entrypoints: ["src/client/runtime-server.ts"],

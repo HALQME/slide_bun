@@ -11,11 +11,12 @@ export async function startServer(inputPath: string, port: number) {
   // State
   let currentHTML = "";
   // assets kept in memory when serve mode externalizes CSS
-  let assetsMemory: { mainCss: string; printCss: string; themeUsed: string } | null = null;
+  let assetsMemory: { mainCss: string; printCss: string; themeCss: string } | null = null;
   let presentation = await loadPresentation(absoluteInputPath);
   const initial = await generator.generate(presentation);
   if (typeof initial === "string") {
     currentHTML = initial;
+    console.log("Generated HTML with inline assets");
   } else {
     currentHTML = initial.html;
     assetsMemory = initial.assets;
@@ -41,8 +42,23 @@ export async function startServer(inputPath: string, port: number) {
       }
 
       // Notify clients
+      const closedControllers: ReadableStreamDefaultController[] = [];
       for (const controller of clients) {
-        controller.enqueue("data: reload\n\n");
+        try {
+          controller.enqueue("data: reload\n\n");
+        } catch (error: any) {
+          if (error.code === "ERR_INVALID_STATE") {
+            // Controller is already closed, mark for removal
+            closedControllers.push(controller);
+          } else {
+            console.error("Error notifying client:", error);
+          }
+        }
+      }
+
+      // Remove closed controllers
+      for (const controller of closedControllers) {
+        clients.delete(controller);
       }
     } catch (e) {
       console.error("Error rebuilding:", e);
@@ -61,9 +77,7 @@ export async function startServer(inputPath: string, port: number) {
             start(controller) {
               clients.add(controller);
             },
-            cancel(controller) {
-              clients.delete(controller);
-            },
+            cancel() {},
           }),
           {
             headers: {
@@ -87,12 +101,23 @@ export async function startServer(inputPath: string, port: number) {
         if (assetsMemory?.mainCss) {
           return new Response(assetsMemory.mainCss, { headers: { "Content-Type": "text/css" } });
         }
+        console.error("CSS assets not found in memory", {
+          hasAssets: !!assetsMemory,
+          hasMainCss: !!assetsMemory?.mainCss,
+        });
         return new Response("Not Found", { status: 404 });
       }
 
       if (url.pathname === "/assets/print.css") {
         if (assetsMemory?.printCss) {
           return new Response(assetsMemory.printCss, { headers: { "Content-Type": "text/css" } });
+        }
+        return new Response("Not Found", { status: 404 });
+      }
+
+      if (url.pathname === "/assets/theme.css") {
+        if (assetsMemory?.printCss) {
+          return new Response(assetsMemory.themeCss, { headers: { "Content-Type": "text/css" } });
         }
         return new Response("Not Found", { status: 404 });
       }

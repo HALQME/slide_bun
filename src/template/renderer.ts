@@ -38,7 +38,7 @@ export class HTMLRenderer {
     presentation: Presentation,
     runtimeScriptContent: string,
   ): Promise<
-    string | { html: string; assets: { mainCss: string; printCss: string; themeUsed: string } }
+    string | { html: string; assets: { mainCss: string; printCss: string; themeCss: string } }
   > {
     const { slides, meta } = presentation;
     const config = this.extractConfig(meta);
@@ -129,7 +129,7 @@ export class HTMLRenderer {
     assets: Awaited<ReturnType<typeof this.loadAssets>>,
     slidesHtml: string,
     runtimeScript: string,
-  ): string | { html: string; assets: { mainCss: string; printCss: string; themeUsed: string } } {
+  ): string | { html: string; assets: { mainCss: string; printCss: string; themeCss: string } } {
     // Minify CSS assets
     const minifiedThemeCss = this.minifier.minifyCSS(assets.themeUsed);
     const minifiedMainCss = this.minifier.minifyCSS(assets.mainCss);
@@ -173,6 +173,7 @@ ${runtimeScript}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${config.title}</title>
 <link rel="stylesheet" href="/assets/styles.css">
+<link rel="stylesheet" href="/assets/theme.css">
 <link rel="stylesheet" href="/assets/print.css" media="print">
 </head>
 <body${config.fontSize ? ` class="${config.fontSize}"` : ""}>
@@ -195,7 +196,7 @@ ${runtimeScript}
       assets: {
         mainCss: minifiedMainCss,
         printCss: minifiedPrintCss,
-        themeUsed: assets.themeUsed,
+        themeCss: minifiedThemeCss,
       },
     };
   }
