@@ -2,6 +2,34 @@ import { SlideNavigator } from "./core/navigator";
 import { PresenterUI } from "./presenter/ui";
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Calculate and apply viewport scale immediately to prevent resize flicker
+  function updateViewportScale() {
+    const container = document.getElementById("slide-container");
+    if (!container) return;
+
+    const slideWidth = 1280;
+    const slideHeight = 720;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    const scaleX = viewportWidth / slideWidth;
+    const scaleY = viewportHeight / slideHeight;
+    const scale = Math.min(scaleX, scaleY);
+
+    // Apply scale directly as inline style to prevent CSS calculation delay
+    container.style.transform = `scale(${scale})`;
+    container.style.transformOrigin = "center center";
+  }
+
+  // Apply scale immediately and on resize with debouncing for performance
+  updateViewportScale();
+
+  let resizeTimeout: number;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = window.setTimeout(updateViewportScale, 16); // ~60fps
+  });
+
   // Check for preview role
   const urlParams = new URLSearchParams(window.location.search);
   const isPreview = urlParams.get("role") === "preview";

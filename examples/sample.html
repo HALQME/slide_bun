@@ -18,33 +18,15 @@
   --font-base: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-code: "Fira Code", monospace;
 
-  /* Design baseline dimensions (used as reference for responsive scaling)
-     Actual slide size is calculated at runtime via CSS variables:
-       --slide-base-width  (px)  : design base width (e.g. 1280)
-       --slide-base-height (px)  : design base height (e.g. 720)
-       --slide-base-scale  (unitless) : computed to fit viewport while preserving aspect
-  */
-  --slide-base-width: 1280;
-  --slide-base-height: 720;
-
-  /* Base font size: 1em = 16px, used as reference for all relative sizing */
-  --base-font-size: 1em;
+  /* Fixed slide dimensions for reference */
+  --slide-width: 1280px;
+  --slide-height: 720px;
 
   /* Spacing (em-based, relative to base font size) */
   --slide-padding: 4em;
   --block-gap: 0.2em;
   --col-gap: 0.5em;
   --line-height: 1.4;
-
-  /* Type scale multipliers (unitless, applied to em) */
-  --h1-mult: 4;
-  --h2-mult: 3;
-  --h3-mult: 2.5;
-  --text-mult: 1.8;
-  --text-sm-mult: 1.2;
-
-  /* Per-slide font scale (set per-slide via inline style e.g. --slide-font-scale: 1.2) */
-  --slide-font-scale: 1;
 }
 
 body {
@@ -62,25 +44,25 @@ body {
   height: 100vh;
 }
 
-#slide-container {
-  /* Responsive sizing: compute a base scale that fits the viewport while preserving aspect.
-     The generator injects a computed --slide-base-scale; fallback calculations can be provided
-     by JS/CSS where needed. Use the base design dimensions defined in :root:
-       --slide-base-width, --slide-base-height
-  */
-  --slide-base-scale: calc(
-    min(100vw, calc(100vh * (var(--slide-base-width) / var(--slide-base-height)))) /
-      var(--slide-base-width)
-  );
+/* Viewport wrapper for slide container */
+.slide-viewport {
+  /* Container maintains fixed size, JS handles scaling */
+  width: 1280px;
+  height: 720px;
+  margin: 0 auto;
+  position: relative;
+}
 
-  width: calc(var(--slide-base-width) * var(--slide-base-scale));
-  height: calc(var(--slide-base-height) * var(--slide-base-scale));
+#slide-container {
+  /* Keep the container at design size - JS will apply scale */
+  width: 1280px;
+  height: 720px;
   position: relative;
   background: var(--c-bg);
   overflow: hidden;
-  max-width: 100vw;
-  max-height: 100vh;
   margin: 0 auto;
+  transform-origin: center center;
+  /* transform: scale() is applied by JavaScript to prevent flicker */
 }
 
 .slide {
@@ -88,24 +70,21 @@ body {
   top: 0;
   left: 0;
 
-  /* Size is relative to the responsive container; use base design dims × base-scale */
-  width: calc(var(--slide-base-width) * var(--slide-base-scale));
-  height: calc(var(--slide-base-height) * var(--slide-base-scale));
+  /* Fill the container (container provides the responsive size) */
+  width: 100%;
+  height: 100%;
 
   padding: var(--slide-padding);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-height: 0; /* Important for flex container to allow children shrinking */
   opacity: 1;
   pointer-events: auto;
 
-  /* Final font-size calculation:
-     base 16px × responsive base scale × per-slide font scale
-     - --slide-base-scale is computed to fit the viewport while maintaining aspect ratio
-     - --slide-font-scale is provided per-slide (via generator), default 1
-  */
-  font-size: calc(16px * var(--slide-base-scale, 1) * var(--slide-font-scale, 1));
+  /* Font-size: base 16px × per-slide font scale × text scale */
+  /* font-size is set inline based on content density */
 }
 
 /* Media constraints: images/videos/iframes fit within slide bounds */
@@ -113,7 +92,7 @@ body {
 .slide video,
 .slide iframe {
   max-width: 100%;
-  max-height: calc(var(--slide-height) - (2 * var(--slide-padding)));
+  max-height: 100%;
   height: auto;
   object-fit: contain;
   display: block;
@@ -149,12 +128,37 @@ body {
   z-index: 1;
 }
 
-/* Typography Defaults (em-based multipliers relative to slide root font-size) */
-h1 {
-  font-size: calc(var(--h1-mult) * 1em);
-  margin-bottom: var(--block-gap);
-  margin-top: 0;
+/* Typography - relative to slide font-size */
+h1,
+.h1 {
+  font-size: 2.5em;
+  font-weight: 700;
+  margin: 0 0 0.5em 0;
   line-height: 1.2;
+}
+
+h2,
+.h2 {
+  font-size: 2em;
+  font-weight: 600;
+  margin: 0 0 0.5em 0;
+  line-height: 1.2;
+}
+
+h3,
+.h3 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 0 0 0.5em 0;
+  line-height: 1.2;
+}
+
+p,
+ul,
+ol {
+  font-size: 1em;
+  margin: 0 0 0.5em 0;
+  line-height: var(--line-height);
 }
 
 h2 {
@@ -216,7 +220,9 @@ pre code {
   display: flex;
   gap: var(--col-gap);
   margin-top: var(--col-gap);
-  align-items: stretch;
+  flex: 1; /* Fill remaining vertical space */
+  min-height: 0;
+  align-items: flex-start; /* Align content to top */
   width: 100%;
   box-sizing: border-box;
 }
@@ -225,6 +231,9 @@ pre code {
 .columns .col {
   flex: 1 1 0;
   min-width: 0; /* allow children to shrink properly */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   box-sizing: border-box;
 }
 
@@ -253,39 +262,44 @@ pre code {
   }
 }
 
+/* Responsive adjustments for tablets */
+@media (max-width: 768px) {
+  :root {
+    --h1-mult: 2.5;
+    --h2-mult: 2;
+    --h3-mult: 1.8;
+    --text-mult: 1.4;
+    --slide-padding: 2em;
+  }
+}
 
-    /* Layout Design System - Responsive sizing */
-    :root {
-      /* Design baseline (used to compute responsive scale) */
-      --slide-base-width: 1280px;
-      --slide-base-height: 720px;
-    }
+/* Responsive adjustments for mobile */
+@media (max-width: 480px) {
+  :root {
+    --h1-mult: 2;
+    --h2-mult: 1.5;
+    --h3-mult: 1.5;
+    --text-mult: 1.2;
+    --slide-padding: 1.5em;
+  }
+}
 
-    /* Compute a responsive base scale for slides:
-       --slide-base-scale = min(viewport width, viewport height * aspect) / baseWidth
-       This ensures slides scale to fit the viewport while preserving the aspect ratio.
-    */
+
+    /* Fixed slide container - JS will apply scaling */
     #slide-container {
-      --slide-base-scale: calc(
-        min(100vw, calc(100vh * (var(--slide-base-width) / var(--slide-base-height))))
-        / var(--slide-base-width)
-      );
-
-      /* Size the container based on the computed base scale (keeps integer px math via calc) */
-      width: calc(var(--slide-base-width) * var(--slide-base-scale));
-      height: calc(var(--slide-base-height) * var(--slide-base-scale));
-      max-width: 100vw;
-      max-height: 100vh;
+      width: 1280px;
+      height: 720px;
       margin: 0 auto;
       position: relative;
+
+      /* transform: scale() is applied by JavaScript to prevent flicker */
+      transform-origin: center center;
+      transform: scale(1.0);
     }
 
-    /* Final font-size for each slide:
-       base 16px × responsive base scale × per-slide font scale (set per-slide via --slide-font-scale)
-       Example: font-size: calc(16px * var(--slide-base-scale) * var(--slide-font-scale))
-    */
+    /* Slides get font-size directly from content-based calculation */
     .slide {
-      font-size: calc(16px * var(--slide-base-scale, 1) * var(--slide-font-scale, 1));
+      /* font-size is set inline based on content density */
     }
 
     /* Utilities */
@@ -333,7 +347,7 @@ pre code {
 }
 
 .caption {
-  font-size: calc(var(--text-sm-mult) * 1em);
+  font-size: 0.8em;
   color: var(--c-dim);
   margin-top: 0.5em;
   display: block;
@@ -341,7 +355,7 @@ pre code {
 
 .fit {
   max-width: 100%;
-  max-height: 80vh;
+  max-height: calc(720px * 0.8);
   object-fit: contain;
   display: block;
   margin: 0 0;
@@ -524,7 +538,7 @@ pre code {
 }
 
 .small {
-  font-size: calc(var(--text-sm-mult) * 1em);
+  font-size: 0.8em;
   line-height: 1.2;
 }
 
@@ -544,6 +558,30 @@ pre code {
   .mark {
     padding: 0.04em 0.12em;
     border-radius: 2px;
+  }
+}
+
+/* Responsive adjustments for tablets */
+@media (max-width: 768px) {
+  .fit {
+    max-height: calc(720px * 0.7);
+  }
+
+  .cover-overlay + * {
+    padding: 1rem;
+    margin: 1rem;
+  }
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 480px) {
+  .fit {
+    max-height: calc(720px * 0.6);
+  }
+
+  .cover-overlay + * {
+    padding: 0.5rem;
+    margin: 0.5rem;
   }
 }
 
@@ -591,8 +629,9 @@ pre code {
   </style>
 </head>
 <body>
-  <div id="slide-container">
-    <section class="slide layout-default" id="slide-1" data-id="1" style="--slide-font-scale: 1.2">
+    <div class="slide-viewport">
+      <div id="slide-container">
+        <section class="slide default" id="slide-1" data-id="1" style="font-size: 32px">
       <h1 class="center">Slide Bun Features</h1>
 <p>全ての機能を詰め込んだデモ・スライドです。</p>
 <p class="caption right">Created by Slide Bun</p>
@@ -601,7 +640,7 @@ pre code {
 まずはタイトルのインパクトを強調。</p>
 </div>
     </section>
-<section class="slide layout-default" id="slide-2" data-id="2" style="--slide-font-scale: 1">
+<section class="slide default" id="slide-2" data-id="2" style="font-size: 24px">
       <h2>基本的なタイポグラフィ</h2>
 <p>Markdownの標準記法がそのまま使えます。</p>
 <ul>
@@ -617,16 +656,16 @@ pre code {
       <div class="speaker-notes" hidden><p>基本機能の紹介。</p>
 </div>
     </section>
-<section class="slide layout-default" id="slide-3" data-id="3" style="--slide-font-scale: 1">
+<section class="slide columns" id="slide-3" data-id="3" style="font-size: 24px">
       <h2 class="center">2カラムレイアウト</h2>
 <p><code> ::: columns</code> で左右に分割できます。</p>
-<div class="slide-container columns"><div class="slide-container col"><h3>左側</h3>
+<div class="columns"><div class="col"><h3>左側</h3>
 <ul>
 <li>リスト</li>
 <li>テキスト</li>
 <li>画像など</li>
 </ul>
-</div><div class="slide-container col"><h3>右側</h3>
+</div><div class="col"><h3>右側</h3>
 <p>コードブロックも置けます。</p>
 <pre><code class="language-typescript">const hello = &quot;world&quot;;
 console.log(hello);
@@ -635,7 +674,7 @@ console.log(hello);
 
       
     </section>
-<section class="slide layout-default" id="slide-4" data-id="4" style="--slide-font-scale: 1.2">
+<section class="slide default" id="slide-4" data-id="4" style="font-size: 32px">
       <h2 class="center">画像の最適化 (Fit)</h2>
 <p><code>{.fit}</code> クラスでスライド内に収めます。</p>
 <p class="fit"><img src="https://placehold.co/600x400" alt="Placeholder"></p>
@@ -643,26 +682,26 @@ console.log(hello);
 
       
     </section>
-<section class="slide layout-default" id="slide-5" data-id="5" style="--slide-font-scale: 1">
+<section class="slide default" id="slide-5" data-id="5" style="font-size: 24px">
       <h3>テキストユーティリティの例（ハイライト・枠）</h3>
 <p>テキストの意図（注目・枠付け）を示すためのユーティリティも使えます。<br>インラインで強調したい語句には <code>[...]</code> とクラスを併用します（例: <code>[重要]{.mark}</code>）。</p>
 <p>この段落では <span class="mark">重要</span> な語句をハイライトして表示します。</p>
 
       
     </section>
-<section class="slide layout-default" id="slide-6" data-id="6" style="--slide-font-scale: 1">
+<section class="slide columns" id="slide-6" data-id="6" style="font-size: 24px">
       <h3>画像ユーティリティの例（数値指定）</h3>
 <p>意図的に画像の見た目を調整するために、数値付きユーティリティを使えます。</p>
 <p>書式は <code>{.opacity 60}</code> のようにクラス名と数値を空白で並べます。
 数値はパーセンテージとして解釈されます。</p>
-<div class="slide-container columns"><div class="slide-container col"><p class="fit opacity-60 gray-80"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted"></p>
+<div class="columns"><div class="col"><p class="fit opacity-60 gray-80"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted"></p>
 <p class="caption">図2: 不透明度60%かつグレースケール80%の例</p>
-</div><div class="slide-container col"><p class="fit"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted"></p>
+</div><div class="col"><p class="fit"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted"></p>
 <p class="caption">図3: フィルター無しの画像</p>
 </div></div>
       
     </section>
-<section class="slide layout-default" id="slide-7" data-id="7" style="--slide-font-scale: 1.2">
+<section class="slide default" id="slide-7" data-id="7" style="font-size: 32px">
       <h2>背景画像 (Cover)</h2>
 <p><code>{.cover}</code> クラスで全画面表示になります。
 文字は上に重なります。</p>
@@ -675,7 +714,7 @@ console.log(hello);
 
       
     </section>
-<section class="slide layout-default" id="slide-8" data-id="8" style="--slide-font-scale: 1.2">
+<section class="slide default" id="slide-8" data-id="8" style="font-size: 32px">
       <h2>スピーカーノート</h2>
 <p>このスライドにはスピーカーノートがあります。<br>(画面には表示されません)</p>
 
@@ -686,9 +725,10 @@ console.log(hello);
 </ul>
 </div>
     </section>
-  </div>
+      </div>
+    </div>
   <script>
-    class v{slides;currentSlideIndex=0;container;minScale;recomputeTimeout=null;onSlideChange;constructor(w={}){let f=w.slideSelector||".slide";this.slides=Array.from(document.querySelectorAll(f)),this.container=document.getElementById(w.containerId||"slide-container"),this.minScale=w.minScale||0.6,this.onSlideChange=w.onSlideChange,document.body.classList.add("js-active"),this.handleResize=this.handleResize.bind(this),this.handleOrientation=this.handleOrientation.bind(this),window.addEventListener("resize",this.handleResize),window.addEventListener("orientationchange",this.handleOrientation)}get totalSlides(){return this.slides.length}get currentIndex(){return this.currentSlideIndex}destroy(){window.removeEventListener("resize",this.handleResize),window.removeEventListener("orientationchange",this.handleOrientation)}goTo(w,f=!1){if(this.slides.length===0)return;let E=Math.max(0,Math.min(w,this.totalSlides-1)),u=this.slides[E];if(u){let h=this.computeScaleForSlide(u);u.style.setProperty("--text-scale",String(Number(h.toFixed(3))))}this.slides.forEach((h,c)=>{if(c===E){if(h.classList.add("active"),this.scheduleRecompute(40),Array.from(h.querySelectorAll("img")).forEach((S)=>{if(!S.complete){let N=()=>{this.scheduleRecompute(),S.removeEventListener("load",N)};S.addEventListener("load",N)}}),document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{this.scheduleRecompute()}).catch(()=>{})}else{if(h.classList.contains("active")){let L=!1,S=(D)=>{if(D.propertyName==="opacity"){if(!L)this.clearScaleFromSlide(h),L=!0;h.removeEventListener("transitionend",S)}};h.addEventListener("transitionend",S);let N=window.setTimeout(()=>{if(!L)this.clearScaleFromSlide(h);try{h.removeEventListener("transitionend",S)}catch{}clearTimeout(N)},350)}else this.clearScaleFromSlide(h);h.classList.remove("active")}});let k=this.currentSlideIndex;if(this.currentSlideIndex=E,!f&&this.onSlideChange&&k!==E)this.onSlideChange(E)}next(){if(this.currentSlideIndex<this.totalSlides-1)this.goTo(this.currentSlideIndex+1)}prev(){if(this.currentSlideIndex>0)this.goTo(this.currentSlideIndex-1)}computeScaleForSlide(w){let f=this.container?this.container.clientHeight:window.innerHeight,E=window.getComputedStyle(w),u=parseFloat(E.paddingTop||"0")||0,k=parseFloat(E.paddingBottom||"0")||0,h=Math.max(0,f-(u+k)),c=Math.max(0,(w.scrollHeight||0)-(u+k));if(!c||c<=h)return 1;let A=h/c;return Math.max(this.minScale,Math.min(1,A))}applyScaleToSlide(w){let f=this.computeScaleForSlide(w);w.style.setProperty("--text-scale",String(Number(f.toFixed(3))))}clearScaleFromSlide(w){w.style.removeProperty("--text-scale")}scheduleRecompute(w=80){if(this.recomputeTimeout!==null)window.clearTimeout(this.recomputeTimeout);this.recomputeTimeout=window.setTimeout(()=>{let f=this.slides[this.currentSlideIndex];if(f)this.applyScaleToSlide(f);this.recomputeTimeout=null},w)}handleResize(){this.scheduleRecompute(80)}handleOrientation(){this.scheduleRecompute(120)}}document.addEventListener("DOMContentLoaded",()=>{let w=new v;function f(){window.location.hash=`#${w.currentIndex+1}`}function E(){let u=window.location.hash.substring(1),k=parseInt(u,10);if(!isNaN(k)&&k>=1&&k<=w.totalSlides){if(k-1!==w.currentIndex)w.goTo(k-1)}}if(document.addEventListener("keydown",(u)=>{switch(u.key){case"ArrowRight":case"Space":case"Enter":case"n":if(u.key==="Space")u.preventDefault();w.next(),f();break;case"ArrowLeft":case"p":w.prev(),f();break;case"Home":w.goTo(0),f();break;case"End":w.goTo(w.totalSlides-1),f();break}}),window.location.hash)E();else w.goTo(0),f();window.addEventListener("hashchange",E)});
+    class _{slides;currentSlideIndex=0;container;minScale;minContainerWidth;minContainerHeight;minContainerScale;recomputeTimeout=null;onSlideChange;constructor(j={}){let A=j.slideSelector||".slide";this.slides=Array.from(document.querySelectorAll(A)),this.container=document.getElementById(j.containerId||"slide-container"),this.minScale=j.minScale||0.4,this.onSlideChange=j.onSlideChange,this.handleResize=this.handleResize.bind(this),this.handleOrientation=this.handleOrientation.bind(this),window.addEventListener("resize",this.handleResize),window.addEventListener("orientationchange",this.handleOrientation),this.minContainerWidth=j.minContainerWidth??1280,this.minContainerHeight=j.minContainerHeight??720,this.minContainerScale=j.minContainerScale??0.7}get totalSlides(){return this.slides.length}get currentIndex(){return this.currentSlideIndex}destroy(){window.removeEventListener("resize",this.handleResize),window.removeEventListener("orientationchange",this.handleOrientation)}goTo(j,A=!1){if(this.slides.length===0)return;let D=Math.max(0,Math.min(j,this.totalSlides-1)),G=this.slides[D];if(G)try{let q=this.computeScaleForSlide(G);G.style.setProperty("--text-scale",String(Number(q.toFixed(3))))}catch(q){console.warn("Failed to compute scale for slide:",q)}this.slides.forEach((q,E)=>{if(E===D){if(q.classList.add("active"),this.scheduleRecompute(40),Array.from(q.querySelectorAll("img")).forEach((M)=>{if(!M.complete){let Q=()=>{this.scheduleRecompute(),M.removeEventListener("load",Q)};M.addEventListener("load",Q)}}),document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{this.scheduleRecompute()}).catch(()=>{})}else{if(q.classList.contains("active")){let P=!1,M=(Z)=>{if(Z.propertyName==="opacity"){if(!P)this.clearScaleFromSlide(q),P=!0;q.removeEventListener("transitionend",M)}};q.addEventListener("transitionend",M);let Q=window.setTimeout(()=>{if(!P)this.clearScaleFromSlide(q);try{q.removeEventListener("transitionend",M)}catch{}clearTimeout(Q)},350)}else this.clearScaleFromSlide(q);q.classList.remove("active")}});let K=this.currentSlideIndex;if(this.currentSlideIndex=D,!A&&this.onSlideChange&&K!==D)this.onSlideChange(D)}next(){if(this.currentSlideIndex<this.totalSlides-1)this.goTo(this.currentSlideIndex+1)}prev(){if(this.currentSlideIndex>0)this.goTo(this.currentSlideIndex-1)}computeScaleForSlide(j){let A=this.container?this.container.clientHeight:window.innerHeight,D=window.getComputedStyle(j),G=parseFloat(D.paddingTop||"0")||0,K=parseFloat(D.paddingBottom||"0")||0,q=Math.max(0,A-(G+K)),E=Math.max(0,(j.scrollHeight||0)-(G+K));if(!E||E<=q)return 1;let R=q/E;return Math.max(this.minScale,Math.min(1,R))}applyScaleToSlide(j){let A=this.computeScaleForSlide(j);j.style.setProperty("--text-scale",String(Number(A.toFixed(3))))}clearScaleFromSlide(j){j.style.removeProperty("--text-scale")}scheduleRecompute(j=80){if(this.recomputeTimeout!==null)window.clearTimeout(this.recomputeTimeout);this.recomputeTimeout=window.setTimeout(()=>{let A=this.slides[this.currentSlideIndex];if(A)this.applyScaleToSlide(A);this.recomputeTimeout=null},j)}handleResize(){this.updateContainerTransform(),this.scheduleRecompute(80)}handleOrientation(){this.updateContainerTransform(),this.scheduleRecompute(120)}updateContainerTransform(){if(!this.container)return;let{innerWidth:j,innerHeight:A}=window;if(j<this.minContainerWidth||A<this.minContainerHeight){let D=j/this.minContainerWidth,G=A/this.minContainerHeight,K=Math.min(D,G);if(this.minContainerScale!==void 0)K=Math.max(K,this.minContainerScale);this.container.style.transform=`scale(${K})`,this.container.style.transformOrigin="center center"}else this.container.style.transform="",this.container.style.transformOrigin=""}}document.addEventListener("DOMContentLoaded",()=>{let j=new _;function A(){let q=document.getElementById("slide-container");if(!q)return;let E=1280,R=720,P=window.innerWidth,M=window.innerHeight,Q=P/E,Z=M/R,$=Math.min(Q,Z);q.style.transform=`scale(${$})`,q.style.transformOrigin="center center"}function D(){window.location.hash=`#${j.currentIndex+1}`}function G(){let q=window.location.hash.substring(1),E=parseInt(q,10);if(!isNaN(E)&&E>=1&&E<=j.totalSlides){if(E-1!==j.currentIndex)j.goTo(E-1)}}if(document.addEventListener("keydown",(q)=>{switch(q.key){case"ArrowRight":case"Space":case"Enter":case"n":if(q.key==="Space")q.preventDefault();j.next(),D();break;case"ArrowLeft":case"p":j.prev(),D();break;case"Home":j.goTo(0),D();break;case"End":j.goTo(j.totalSlides-1),D();break}}),window.location.hash)G();else j.goTo(0),D();A();let K;window.addEventListener("resize",()=>{clearTimeout(K),K=window.setTimeout(A,16)}),document.body.classList.add("js-active"),window.addEventListener("hashchange",G)});
 
   </script>
 </body>

@@ -12,13 +12,13 @@ describe("containerExtension", () => {
 
   it("should parse speaker container", () => {
     const html = marked.parse("::: speaker\nNote content\n:::");
-    expect(html).toContain('<div class="slide-container speaker">');
+    expect(html).toContain('<div class="speaker">');
     expect(html).toContain("Note content");
   });
 
   it("should parse custom container", () => {
     const html = marked.parse("::: warning\nWarning message\n:::");
-    expect(html).toContain('<div class="slide-container warning">');
+    expect(html).toContain('<div class="warning">');
     expect(html).toContain("Warning message");
   });
 });

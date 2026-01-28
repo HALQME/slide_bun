@@ -31,7 +31,6 @@ describe("HTMLRenderer", () => {
             id: 1,
             contentTokens: [],
             noteTokens: [],
-            layout: "default",
           },
         ],
       };

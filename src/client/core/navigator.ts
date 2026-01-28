@@ -5,10 +5,11 @@ export class SlideNavigator {
   private currentSlideIndex: number = 0;
   private container: HTMLElement | null;
   private minScale: number;
+  private minContainerWidth: number;
+  private minContainerHeight: number;
+  private minContainerScale: number;
   private recomputeTimeout: number | null = null;
   private onSlideChange?: (index: number) => void;
-  private minContainerWidth: number = 600; // コンテナーの最小幅（px）
-  private minContainerScale: number = 0.7; // 最小スケール比率（元サイズの何倍まで縮小するか）
 
   constructor(options: NavigatorOptions = {}) {
     const selector = options.slideSelector || ".slide";
@@ -16,14 +17,6 @@ export class SlideNavigator {
     this.container = document.getElementById(options.containerId || "slide-container");
     this.minScale = options.minScale || 0.4;
     this.onSlideChange = options.onSlideChange;
-
-    // オプションで設定可能
-    if (options.minContainerWidth !== undefined) {
-      this.minContainerWidth = options.minContainerWidth;
-    }
-    if (options.minContainerScale !== undefined) {
-      this.minContainerScale = options.minContainerScale;
-    }
 
     // Bind methods
     this.handleResize = this.handleResize.bind(this);
@@ -33,8 +26,10 @@ export class SlideNavigator {
     window.addEventListener("resize", this.handleResize);
     window.addEventListener("orientationchange", this.handleOrientation);
 
-    // 初期化時にコンテナースケールを計算
-    this.updateContainerScale();
+    // Container scaling thresholds (defaults)
+    this.minContainerWidth = options.minContainerWidth ?? 1280;
+    this.minContainerHeight = options.minContainerHeight ?? 720;
+    this.minContainerScale = options.minContainerScale ?? 0.7;
   }
 
   public get totalSlides(): number {
@@ -66,9 +61,6 @@ export class SlideNavigator {
         console.warn("Failed to compute scale for slide:", e);
       }
     }
-
-    // Update container scale on slide change
-    this.updateContainerScale();
 
     this.slides.forEach((slide, i) => {
       const isActive = i === targetIndex;
@@ -173,30 +165,6 @@ export class SlideNavigator {
     slide.style.removeProperty("--text-scale");
   }
 
-  /**
-   * コンテナースケールを更新します。
-   * ビューポートが小さすぎる場合、slide-container全体を縮小してレイアウト崩壊を防ぎます。
-   */
-  private updateContainerScale() {
-    if (!this.container) {
-      return;
-    }
-
-    const viewportWidth = window.innerWidth;
-
-    // ビューポート幅が最小幅より小なら、スケールを計算
-    let scale = 1;
-    if (viewportWidth < this.minContainerWidth) {
-      // 最小幅 ÷ 現在の幅 でスケールを計算
-      scale = viewportWidth / this.minContainerWidth;
-      // 最小スケール比率より小さくしない
-      scale = Math.max(this.minContainerScale, scale);
-    }
-
-    // CSS変数にスケールを設定
-    this.container.style.setProperty("--container-scale", String(Number(scale.toFixed(3))));
-  }
-
   private scheduleRecompute(delay = 80) {
     if (this.recomputeTimeout !== null) {
       window.clearTimeout(this.recomputeTimeout);
@@ -209,12 +177,39 @@ export class SlideNavigator {
   }
 
   private handleResize() {
-    this.updateContainerScale();
+    this.updateContainerTransform();
     this.scheduleRecompute(80);
   }
 
   private handleOrientation() {
-    this.updateContainerScale();
+    this.updateContainerTransform();
     this.scheduleRecompute(120);
+  }
+
+  /**
+   * ビューポートがデザイン基準（minContainerWidth/minContainerHeight）より
+   * 小さい場合に、#slide-container に transform: scale(...) を設定します。
+   * 単純な閾値基準で無条件にスケールする実装です。
+   */
+  private updateContainerTransform() {
+    if (!this.container) return;
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // どちらか一方が閾値を下回ればスケールを適用
+    if (vw < this.minContainerWidth || vh < this.minContainerHeight) {
+      // スケール比率は両方の比率のうち小さい方を使う
+      const sx = vw / this.minContainerWidth;
+      const sy = vh / this.minContainerHeight;
+      let s = Math.min(sx, sy);
+      if (this.minContainerScale !== undefined) s = Math.max(s, this.minContainerScale);
+      this.container.style.transform = `scale(${s})`;
+      this.container.style.transformOrigin = "center center";
+    } else {
+      // 閾値以上では transform をリセット
+      this.container.style.transform = "";
+      this.container.style.transformOrigin = "";
+    }
   }
 }

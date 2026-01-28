@@ -71,7 +71,6 @@ export function splitTokensToSlides(tokens: Token[]): Slide[] {
         id: slideIdCounter++,
         contentTokens: [...currentSlideTokens],
         noteTokens: [...currentNoteTokens],
-        layout: "default", // Default layout, can be determined by heuristics later if needed
         contentLength: calculateContentLength(currentSlideTokens),
       });
     }

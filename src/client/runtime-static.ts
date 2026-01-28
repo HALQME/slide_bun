@@ -3,6 +3,25 @@ import { SlideNavigator } from "./core/navigator";
 document.addEventListener("DOMContentLoaded", () => {
   const navigator = new SlideNavigator();
 
+  // Calculate and apply viewport scale immediately to prevent resize flicker
+  function updateViewportScale() {
+    const container = document.getElementById("slide-container");
+    if (!container) return;
+
+    const slideWidth = 1280;
+    const slideHeight = 720;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    const scaleX = viewportWidth / slideWidth;
+    const scaleY = viewportHeight / slideHeight;
+    const scale = Math.min(scaleX, scaleY);
+
+    // Apply scale directly as inline style to prevent CSS calculation delay
+    container.style.transform = `scale(${scale})`;
+    container.style.transformOrigin = "center center";
+  }
+
   function updateHash() {
     window.location.hash = `#${navigator.currentIndex + 1}`;
   }
@@ -52,6 +71,15 @@ document.addEventListener("DOMContentLoaded", () => {
     navigator.goTo(0);
     updateHash();
   }
+
+  // Apply scale immediately and on resize with debouncing for performance
+  updateViewportScale();
+
+  let resizeTimeout: number;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = window.setTimeout(updateViewportScale, 16); // ~60fps
+  });
 
   // Indicate JS is active after initial setup to avoid FOUC/blank screen
   document.body.classList.add("js-active");

@@ -6,7 +6,7 @@ import {
   styledImageExtension,
   styledParagraphExtension,
 } from "../core/extensions";
-import { getSlideStyleAttribute, type LayoutType } from "../core/layout-design";
+import { getSlideFontSizeAttribute } from "../core/layout-design";
 import type { Presentation, PresentationMeta } from "../types";
 
 // Constants
@@ -88,15 +88,12 @@ export class HTMLRenderer {
       notesHtml = `<div class="speaker-notes" hidden>${this.markedInstance.parser(slide.noteTokens)}</div>`;
     }
 
-    const layoutClass = slide.layout ? `layout-${slide.layout}` : "";
-
-    // Calculate font-size based on layout and content length
-    const layout = (slide.layout || "default") as LayoutType;
+    // Calculate font-size based on content length
     const contentLength = slide.contentLength ?? 0;
-    const styleAttr = getSlideStyleAttribute(layout, contentLength);
+    const fontSizeAttr = getSlideFontSizeAttribute(contentLength);
 
     return `
-    <section class="slide ${layoutClass}" id="slide-${slide.id}" data-id="${slide.id}" style="${styleAttr}">
+    <section class="slide" id="slide-${slide.id}" data-id="${slide.id}" style="${fontSizeAttr}">
       ${contentHtml}
       ${notesHtml}
     </section>
@@ -109,6 +106,8 @@ export class HTMLRenderer {
     slidesHtml: string,
     runtimeScript: string,
   ): string {
+    // Calculate initial scale to prevent flicker on load
+    const initialScale = "1.0"; // Will be overridden by JS immediately, prevents flash
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -119,38 +118,21 @@ export class HTMLRenderer {
     /* Theme: ${config.theme} */
     ${assets.themeCss}
 
-    /* Layout Design System - Responsive sizing */
-    :root {
-      /* Design baseline (used to compute responsive scale) */
-      --slide-base-width: 1280px;
-      --slide-base-height: 720px;
-    }
-
-    /* Compute a responsive base scale for slides:
-       --slide-base-scale = min(viewport width, viewport height * aspect) / baseWidth
-       This ensures slides scale to fit the viewport while preserving the aspect ratio.
-    */
+    /* Fixed slide container - JS will apply scaling */
     #slide-container {
-      --slide-base-scale: calc(
-        min(100vw, calc(100vh * (var(--slide-base-width) / var(--slide-base-height))))
-        / var(--slide-base-width)
-      );
-
-      /* Size the container based on the computed base scale (keeps integer px math via calc) */
-      width: calc(var(--slide-base-width) * var(--slide-base-scale));
-      height: calc(var(--slide-base-height) * var(--slide-base-scale));
-      max-width: 100vw;
-      max-height: 100vh;
+      width: 1280px;
+      height: 720px;
       margin: 0 auto;
       position: relative;
+
+      /* transform: scale() is applied by JavaScript to prevent flicker */
+      transform-origin: center center;
+      transform: scale(${initialScale});
     }
 
-    /* Final font-size for each slide:
-       base 16px × responsive base scale × per-slide font scale (set per-slide via --slide-font-scale)
-       Example: font-size: calc(16px * var(--slide-base-scale) * var(--slide-font-scale))
-    */
+    /* Slides get font-size directly from content-based calculation */
     .slide {
-      font-size: calc(16px * var(--slide-base-scale, 1) * var(--slide-font-scale, 1));
+      /* font-size is set inline based on content density */
     }
 
     /* Utilities */
@@ -161,9 +143,11 @@ export class HTMLRenderer {
   </style>
 </head>
 <body>
-  <div id="slide-container">
-    ${slidesHtml}
-  </div>
+    <div class="slide-viewport">
+      <div id="slide-container">
+        ${slidesHtml}
+      </div>
+    </div>
   <script>
     ${runtimeScript}
   </script>

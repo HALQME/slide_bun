@@ -33,6 +33,6 @@ export const containerExtension: TokenizerAndRendererExtension = {
   },
   renderer(token) {
     const containerToken = token as ContainerToken;
-    return `<div class="slide-container ${containerToken.kind}">${this.parser.parse(containerToken.tokens)}</div>`;
+    return `<div class="${containerToken.kind}">${this.parser.parse(containerToken.tokens)}</div>`;
   },
 };
