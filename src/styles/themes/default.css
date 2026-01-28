@@ -37,6 +37,13 @@
 
   /* Per-slide font scale (set per-slide via inline style e.g. --slide-font-scale: 1.2) */
   --slide-font-scale: 1;
+
+  /* Container scale to prevent layout collapse on very small screens.
+     Applied as transform: scale() to the container. Range: 0-1 (no scaling down below 1).
+     0.7 means the container is scaled down to 70% to fit smaller screens while maintaining readability.
+  */
+  --container-scale: 1;
+  --min-container-width: 600; /* Minimum width in px before scaling starts */
 }
 
 body {
@@ -56,9 +63,9 @@ body {
 
 #slide-container {
   /* Responsive sizing: compute a base scale that fits the viewport while preserving aspect.
-     The generator injects a computed --slide-base-scale; fallback calculations can be provided
-     by JS/CSS where needed. Use the base design dimensions defined in :root:
-       --slide-base-width, --slide-base-height
+      The generator injects a computed --slide-base-scale; fallback calculations can be provided
+      by JS/CSS where needed. Use the base design dimensions defined in :root:
+        --slide-base-width, --slide-base-height
   */
   --slide-base-scale: calc(
     min(100vw, calc(100vh * (var(--slide-base-width) / var(--slide-base-height)))) /
@@ -73,6 +80,13 @@ body {
   max-width: 100vw;
   max-height: 100vh;
   margin: 0 auto;
+
+  /* Container scale transform to prevent layout collapse on very small screens.
+     The scale is applied via --container-scale (controlled by JS navigator).
+     transform-origin is center to scale from the center.
+  */
+  transform: scale(var(--container-scale, 1));
+  transform-origin: center center;
 }
 
 .slide {

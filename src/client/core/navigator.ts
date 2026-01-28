@@ -7,6 +7,8 @@ export class SlideNavigator {
   private minScale: number;
   private recomputeTimeout: number | null = null;
   private onSlideChange?: (index: number) => void;
+  private minContainerWidth: number = 600; // コンテナーの最小幅（px）
+  private minContainerScale: number = 0.7; // 最小スケール比率（元サイズの何倍まで縮小するか）
 
   constructor(options: NavigatorOptions = {}) {
     const selector = options.slideSelector || ".slide";
@@ -15,6 +17,14 @@ export class SlideNavigator {
     this.minScale = options.minScale || 0.4;
     this.onSlideChange = options.onSlideChange;
 
+    // オプションで設定可能
+    if (options.minContainerWidth !== undefined) {
+      this.minContainerWidth = options.minContainerWidth;
+    }
+    if (options.minContainerScale !== undefined) {
+      this.minContainerScale = options.minContainerScale;
+    }
+
     // Bind methods
     this.handleResize = this.handleResize.bind(this);
     this.handleOrientation = this.handleOrientation.bind(this);
@@ -22,6 +32,9 @@ export class SlideNavigator {
     // Add listeners
     window.addEventListener("resize", this.handleResize);
     window.addEventListener("orientationchange", this.handleOrientation);
+
+    // 初期化時にコンテナースケールを計算
+    this.updateContainerScale();
   }
 
   public get totalSlides(): number {
@@ -53,6 +66,9 @@ export class SlideNavigator {
         console.warn("Failed to compute scale for slide:", e);
       }
     }
+
+    // Update container scale on slide change
+    this.updateContainerScale();
 
     this.slides.forEach((slide, i) => {
       const isActive = i === targetIndex;
@@ -157,6 +173,30 @@ export class SlideNavigator {
     slide.style.removeProperty("--text-scale");
   }
 
+  /**
+   * コンテナースケールを更新します。
+   * ビューポートが小さすぎる場合、slide-container全体を縮小してレイアウト崩壊を防ぎます。
+   */
+  private updateContainerScale() {
+    if (!this.container) {
+      return;
+    }
+
+    const viewportWidth = window.innerWidth;
+
+    // ビューポート幅が最小幅より小なら、スケールを計算
+    let scale = 1;
+    if (viewportWidth < this.minContainerWidth) {
+      // 最小幅 ÷ 現在の幅 でスケールを計算
+      scale = viewportWidth / this.minContainerWidth;
+      // 最小スケール比率より小さくしない
+      scale = Math.max(this.minContainerScale, scale);
+    }
+
+    // CSS変数にスケールを設定
+    this.container.style.setProperty("--container-scale", String(Number(scale.toFixed(3))));
+  }
+
   private scheduleRecompute(delay = 80) {
     if (this.recomputeTimeout !== null) {
       window.clearTimeout(this.recomputeTimeout);
@@ -169,10 +209,12 @@ export class SlideNavigator {
   }
 
   private handleResize() {
+    this.updateContainerScale();
     this.scheduleRecompute(80);
   }
 
   private handleOrientation() {
+    this.updateContainerScale();
     this.scheduleRecompute(120);
   }
 }
