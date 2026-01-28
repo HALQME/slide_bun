@@ -106,7 +106,9 @@ body {
 .slide video,
 .slide iframe {
   max-width: 100%;
-  max-height: 100%; /* Constrain to slide height (minus padding due to flex/box model if applicable, but usually safe) */
+  /* Constrain to slide design height minus padding. 
+     This effectively limits images to the "safe area" regardless of container flex sizing. */
+  max-height: calc(var(--slide-base-height) * 1px - (2 * var(--slide-padding)));
   height: auto;
   object-fit: contain;
   display: block;
@@ -227,7 +229,8 @@ pre code {
 .columns .col video,
 .columns .col iframe {
   max-width: 100%;
-  max-height: 100%; /* Prevent column overflow */
+  /* Same constraint as main images to prevent column blow-out */
+  max-height: calc(var(--slide-base-height) * 1px - (2 * var(--slide-padding)));
   height: auto;
   display: block;
 }
