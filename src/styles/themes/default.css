@@ -105,7 +105,7 @@ body {
 .slide video,
 .slide iframe {
   max-width: 100%;
-  max-height: calc(var(--slide-height) - (2 * var(--slide-padding)));
+  max-height: 100%; /* Constrain to slide height (minus padding due to flex/box model if applicable, but usually safe) */
   height: auto;
   object-fit: contain;
   display: block;
