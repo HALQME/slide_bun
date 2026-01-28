@@ -73,6 +73,9 @@ body {
 
   /* Font-size: base 16px × per-slide font scale × text scale */
   /* font-size is set inline based on content density */
+
+  /* Text scale for dynamic adjustment */
+  font-size: calc(var(--font-size-base, 16px) * var(--text-scale, 1));
 }
 
 /* Media constraints: images/videos/iframes fit within slide bounds */
@@ -237,48 +240,4 @@ pre code {
 .columns .col pre {
   max-width: 100%;
   overflow: auto;
-}
-
-/* Responsive adjustments for tablets */
-@media (max-width: 768px) {
-  :root {
-    --slide-padding: 2em;
-  }
-
-  h1 {
-    font-size: 2.5em;
-  }
-  h2 {
-    font-size: 2em;
-  }
-  h3 {
-    font-size: 1.8em;
-  }
-  p,
-  ul,
-  ol {
-    font-size: 1.4em;
-  }
-}
-
-/* Responsive adjustments for mobile */
-@media (max-width: 480px) {
-  :root {
-    --slide-padding: 1.5em;
-  }
-
-  h1 {
-    font-size: 2em;
-  }
-  h2 {
-    font-size: 1.5em;
-  }
-  h3 {
-    font-size: 1.5em;
-  }
-  p,
-  ul,
-  ol {
-    font-size: 1.2em;
-  }
 }

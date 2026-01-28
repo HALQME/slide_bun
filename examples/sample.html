@@ -18,10 +18,6 @@
   --font-base: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-code: "Fira Code", monospace;
 
-  /* Fixed slide dimensions for reference */
-  --slide-width: 1280px;
-  --slide-height: 720px;
-
   /* Spacing (em-based, relative to base font size) */
   --slide-padding: 4em;
   --block-gap: 0.2em;
@@ -85,6 +81,9 @@ body {
 
   /* Font-size: base 16px × per-slide font scale × text scale */
   /* font-size is set inline based on content density */
+
+  /* Text scale for dynamic adjustment */
+  font-size: calc(var(--font-size-base, 16px) * var(--text-scale, 1));
 }
 
 /* Media constraints: images/videos/iframes fit within slide bounds */
@@ -162,13 +161,13 @@ ol {
 }
 
 h2 {
-  font-size: calc(var(--h2-mult) * 1em);
+  font-size: 2em;
   margin-bottom: var(--block-gap);
   margin-top: 0;
 }
 
 h3 {
-  font-size: calc(var(--h3-mult) * 1em);
+  font-size: 1.5em;
   margin-bottom: var(--block-gap);
   margin-top: 0;
 }
@@ -176,7 +175,7 @@ h3 {
 p,
 ul,
 ol {
-  font-size: calc(var(--text-mult) * 1em);
+  font-size: 1em;
   line-height: var(--line-height);
   margin-top: 0;
   margin-bottom: var(--block-gap);
@@ -251,39 +250,6 @@ pre code {
   overflow: auto;
 }
 
-/* Small screens: stack columns vertically */
-@media (max-width: 900px) {
-  .columns {
-    flex-direction: column;
-    gap: calc(var(--col-gap) / 2);
-  }
-  .columns .col {
-    width: 100%;
-  }
-}
-
-/* Responsive adjustments for tablets */
-@media (max-width: 768px) {
-  :root {
-    --h1-mult: 2.5;
-    --h2-mult: 2;
-    --h3-mult: 1.8;
-    --text-mult: 1.4;
-    --slide-padding: 2em;
-  }
-}
-
-/* Responsive adjustments for mobile */
-@media (max-width: 480px) {
-  :root {
-    --h1-mult: 2;
-    --h2-mult: 1.5;
-    --h3-mult: 1.5;
-    --text-mult: 1.2;
-    --slide-padding: 1.5em;
-  }
-}
-
 
     /* Fixed slide container - JS will apply scaling */
     #slide-container {
@@ -330,20 +296,6 @@ pre code {
 .bottom {
   margin-top: auto;
   margin-bottom: 0;
-}
-
-.slide-layout-columns {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--col-gap, 2rem);
-  width: 100%;
-  align-items: start;
-}
-
-.column {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
 }
 
 .caption {
@@ -563,25 +515,9 @@ pre code {
 
 /* Responsive adjustments for tablets */
 @media (max-width: 768px) {
-  .fit {
-    max-height: calc(720px * 0.7);
-  }
-
-  .cover-overlay + * {
-    padding: 1rem;
-    margin: 1rem;
-  }
-}
-
-/* Responsive adjustments for mobile */
-@media (max-width: 480px) {
-  .fit {
-    max-height: calc(720px * 0.6);
-  }
-
-  .cover-overlay + * {
-    padding: 0.5rem;
-    margin: 0.5rem;
+  .mark {
+    padding: 0.04em 0.12em;
+    border-radius: 2px;
   }
 }
 
@@ -631,7 +567,7 @@ pre code {
 <body>
     <div class="slide-viewport">
       <div id="slide-container">
-        <section class="slide default" id="slide-1" data-id="1" style="font-size: 32px">
+        <section class="slide" id="slide-1" data-id="1" style="font-size: 32px">
       <h1 class="center">Slide Bun Features</h1>
 <p>全ての機能を詰め込んだデモ・スライドです。</p>
 <p class="caption right">Created by Slide Bun</p>
@@ -640,7 +576,7 @@ pre code {
 まずはタイトルのインパクトを強調。</p>
 </div>
     </section>
-<section class="slide default" id="slide-2" data-id="2" style="font-size: 24px">
+<section class="slide" id="slide-2" data-id="2" style="font-size: 24px">
       <h2>基本的なタイポグラフィ</h2>
 <p>Markdownの標準記法がそのまま使えます。</p>
 <ul>
@@ -656,7 +592,7 @@ pre code {
       <div class="speaker-notes" hidden><p>基本機能の紹介。</p>
 </div>
     </section>
-<section class="slide columns" id="slide-3" data-id="3" style="font-size: 24px">
+<section class="slide" id="slide-3" data-id="3" style="font-size: 24px">
       <h2 class="center">2カラムレイアウト</h2>
 <p><code> ::: columns</code> で左右に分割できます。</p>
 <div class="columns"><div class="col"><h3>左側</h3>
@@ -674,7 +610,7 @@ console.log(hello);
 
       
     </section>
-<section class="slide default" id="slide-4" data-id="4" style="font-size: 32px">
+<section class="slide" id="slide-4" data-id="4" style="font-size: 32px">
       <h2 class="center">画像の最適化 (Fit)</h2>
 <p><code>{.fit}</code> クラスでスライド内に収めます。</p>
 <p class="fit"><img src="https://placehold.co/600x400" alt="Placeholder"></p>
@@ -682,14 +618,14 @@ console.log(hello);
 
       
     </section>
-<section class="slide default" id="slide-5" data-id="5" style="font-size: 24px">
+<section class="slide" id="slide-5" data-id="5" style="font-size: 24px">
       <h3>テキストユーティリティの例（ハイライト・枠）</h3>
 <p>テキストの意図（注目・枠付け）を示すためのユーティリティも使えます。<br>インラインで強調したい語句には <code>[...]</code> とクラスを併用します（例: <code>[重要]{.mark}</code>）。</p>
 <p>この段落では <span class="mark">重要</span> な語句をハイライトして表示します。</p>
 
       
     </section>
-<section class="slide columns" id="slide-6" data-id="6" style="font-size: 24px">
+<section class="slide" id="slide-6" data-id="6" style="font-size: 24px">
       <h3>画像ユーティリティの例（数値指定）</h3>
 <p>意図的に画像の見た目を調整するために、数値付きユーティリティを使えます。</p>
 <p>書式は <code>{.opacity 60}</code> のようにクラス名と数値を空白で並べます。
@@ -701,7 +637,7 @@ console.log(hello);
 </div></div>
       
     </section>
-<section class="slide default" id="slide-7" data-id="7" style="font-size: 32px">
+<section class="slide" id="slide-7" data-id="7" style="font-size: 32px">
       <h2>背景画像 (Cover)</h2>
 <p><code>{.cover}</code> クラスで全画面表示になります。
 文字は上に重なります。</p>
@@ -714,7 +650,7 @@ console.log(hello);
 
       
     </section>
-<section class="slide default" id="slide-8" data-id="8" style="font-size: 32px">
+<section class="slide" id="slide-8" data-id="8" style="font-size: 32px">
       <h2>スピーカーノート</h2>
 <p>このスライドにはスピーカーノートがあります。<br>(画面には表示されません)</p>
 

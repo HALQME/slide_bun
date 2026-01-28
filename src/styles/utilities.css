@@ -244,24 +244,8 @@
 
 /* Responsive adjustments for tablets */
 @media (max-width: 768px) {
-  .fit {
-    max-height: calc(720px * 0.7);
-  }
-
-  .cover-overlay + * {
-    padding: 1rem;
-    margin: 1rem;
-  }
-}
-
-/* Responsive adjustments for mobile */
-@media (max-width: 480px) {
-  .fit {
-    max-height: calc(720px * 0.6);
-  }
-
-  .cover-overlay + * {
-    padding: 0.5rem;
-    margin: 0.5rem;
+  .mark {
+    padding: 0.04em 0.12em;
+    border-radius: 2px;
   }
 }
