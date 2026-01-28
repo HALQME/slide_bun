@@ -73,7 +73,8 @@ export async function generateSlides(
 
   const runtimeJs = await buildResult.outputs[0]!.text();
 
-  return renderer.generate(presentation, runtimeJs);
+  const result = await renderer.generate(presentation, runtimeJs);
+  return typeof result === "string" ? result : result.html;
 }
 
 /**
@@ -120,5 +121,6 @@ export async function generateHTML(
 
   const runtimeJs = await buildResult.outputs[0]!.text();
 
-  return renderer.generate(presentation, runtimeJs);
+  const result = await renderer.generate(presentation, runtimeJs);
+  return typeof result === "string" ? result : result.html;
 }

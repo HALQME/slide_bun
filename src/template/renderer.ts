@@ -9,6 +9,9 @@ import {
 import { getSlideFontSizeAttribute } from "../core/layout-design";
 import { HTMLMinifier } from "../utils/minifier";
 import type { Presentation, PresentationMeta } from "../types";
+import path from "node:path";
+
+import { themes, styles } from "./styles";
 
 // Constants
 const DEFAULT_TITLE = "Untitled Presentation";
@@ -18,14 +21,25 @@ export class HTMLRenderer {
   private markedInstance: Marked;
   private minifier: HTMLMinifier;
   private enableMinify: boolean;
+  private inlineAssets: boolean;
 
-  constructor(options: { enableMinify?: boolean } = {}) {
+  constructor(options: { enableMinify?: boolean; inlineAssets?: boolean } = {}) {
     this.enableMinify = options.enableMinify ?? false;
+    this.inlineAssets = options.inlineAssets ?? true;
     this.markedInstance = this.createMarkedInstance();
     this.minifier = new HTMLMinifier();
   }
 
-  async generate(presentation: Presentation, runtimeScriptContent: string): Promise<string> {
+  /**
+   * When inlineAssets is true this returns a string of full HTML.
+   * When inlineAssets is false this returns an object containing html and assets (CSS) kept in memory
+   */
+  async generate(
+    presentation: Presentation,
+    runtimeScriptContent: string,
+  ): Promise<
+    string | { html: string; assets: { mainCss: string; printCss: string; themeUsed: string } }
+  > {
     const { slides, meta } = presentation;
     const config = this.extractConfig(meta);
 
@@ -61,72 +75,24 @@ export class HTMLRenderer {
     };
   }
 
+  private resolve = (filepath: string) => path.resolve(path.dirname(Bun.main), filepath);
+
   private async loadAssets(theme: string) {
-    // Load main CSS file and resolve @imports server-side
-    let mainCss: string;
-    try {
-      mainCss = await Bun.file("src/styles/styles.css").text();
-    } catch {
-      throw new Error("Main CSS file not found: src/styles/styles.css");
-    }
+    const mainCss = await Bun.file(this.resolve(styles.base)).text();
 
-    // Resolve @import statements by reading the files and replacing them
-    const importRegex = /@import url\("([^"]+)"\);/g;
-    let resolvedCss = mainCss;
-    const importPromises: Promise<{ original: string; content: string }>[] = [];
+    // Theme Style (Fallback Default);
+    const themeUsed =
+      theme in themes && themes[theme as keyof typeof themes]
+        ? await Bun.file(this.resolve(themes[theme as keyof typeof themes])).text()
+        : await Bun.file(this.resolve(themes.default)).text();
 
-    const matches: Array<{ full: string; path: string }> = [];
-    let match: RegExpExecArray | null;
-    let themeToUse = theme;
-
-    while ((match = importRegex.exec(mainCss)) !== null) {
-      if (match[1]) {
-        const importPath = match[1];
-        const fullImportPath = `src/styles/${importPath}`;
-
-        // For theme imports, resolve the theme and check existence
-        let actualImportPath = fullImportPath;
-        if (importPath.includes("themes/default.css")) {
-          actualImportPath = `src/styles/themes/${theme}.css`;
-          try {
-            await Bun.file(actualImportPath).text();
-            themeToUse = theme;
-          } catch {
-            console.warn(`Theme "${theme}" not found, falling back to ${DEFAULT_THEME}`);
-            actualImportPath = `src/styles/themes/${DEFAULT_THEME}.css`;
-            themeToUse = DEFAULT_THEME;
-          }
-        }
-
-        matches.push({
-          full: match[0],
-          path: actualImportPath,
-        });
-      }
-    }
-
-    for (const { full, path } of matches) {
-      importPromises.push(
-        Bun.file(path)
-          .text()
-          .then((content) => {
-            return { original: full, content };
-          }),
-      );
-    }
-
-    const resolvedImports = await Promise.all(importPromises);
-    for (const resolved of resolvedImports) {
-      resolvedCss = resolvedCss.replace(resolved.original, resolved.content);
-    }
-
-    // Load print styles separately
-    const printCss = await Bun.file("src/styles/print.css").text();
+    // Style For export PDF
+    const printCss = await Bun.file(this.resolve(styles.print)).text();
 
     return {
-      mainCss: resolvedCss,
+      mainCss,
       printCss,
-      themeUsed: themeToUse,
+      themeUsed,
     };
   }
 
@@ -163,20 +129,21 @@ export class HTMLRenderer {
     assets: Awaited<ReturnType<typeof this.loadAssets>>,
     slidesHtml: string,
     runtimeScript: string,
-  ): string {
+  ): string | { html: string; assets: { mainCss: string; printCss: string; themeUsed: string } } {
     // Minify CSS assets
+    const minifiedThemeCss = this.minifier.minifyCSS(assets.themeUsed);
     const minifiedMainCss = this.minifier.minifyCSS(assets.mainCss);
     const minifiedPrintCss = this.minifier.minifyCSS(assets.printCss);
 
-    const html = `<!DOCTYPE html>
+    if (this.inlineAssets) {
+      const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${config.title}</title>
 <style>
-/* Theme: ${assets.themeUsed} */
-${minifiedMainCss}${minifiedPrintCss}
+${minifiedThemeCss}${minifiedMainCss}${minifiedPrintCss}
 </style>
 </head>
 <body${config.fontSize ? ` class="${config.fontSize}"` : ""}>
@@ -191,10 +158,45 @@ ${runtimeScript}
 </body>
 </html>`;
 
-    // Always remove HTML comments (regardless of minify setting)
-    const simplifyed = this.minifier.removeComments(html).replace(/^(\s+|\t)/gm, "");
+      // Always remove HTML comments (regardless of minify setting)
+      const simplifyed = this.minifier.removeComments(html).replace(/^(\s+|\t)/gm, "");
 
-    // Minify final HTML if enabled
-    return this.enableMinify ? this.minifier.minify(simplifyed) : simplifyed;
+      // Minify final HTML if enabled
+      return this.enableMinify ? this.minifier.minify(simplifyed) : simplifyed;
+    }
+
+    // Externalize assets: return HTML that links to static asset paths and include minified CSS in the returned assets
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${config.title}</title>
+<link rel="stylesheet" href="/assets/styles.css">
+<link rel="stylesheet" href="/assets/print.css" media="print">
+</head>
+<body${config.fontSize ? ` class="${config.fontSize}"` : ""}>
+<div class="slide-viewport">
+<div id="slide-container">
+${slidesHtml}
+</div>
+</div>
+<script>
+${runtimeScript}
+</script>
+</body>
+</html>`;
+
+    const simplifyed = this.minifier.removeComments(html).replace(/^(\s+|\t)/gm, "");
+    const finalHtml = this.enableMinify ? this.minifier.minify(simplifyed) : simplifyed;
+
+    return {
+      html: finalHtml,
+      assets: {
+        mainCss: minifiedMainCss,
+        printCss: minifiedPrintCss,
+        themeUsed: assets.themeUsed,
+      },
+    };
   }
 }

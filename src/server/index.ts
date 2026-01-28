@@ -6,12 +6,20 @@ import { ServerHTMLGenerator } from "./generator";
 export async function startServer(inputPath: string, port: number) {
   const absoluteInputPath = path.resolve(inputPath);
   const inputDir = path.dirname(absoluteInputPath);
-  const generator = new ServerHTMLGenerator();
+  const generator = new ServerHTMLGenerator({ inlineAssets: false });
 
   // State
   let currentHTML = "";
+  // assets kept in memory when serve mode externalizes CSS
+  let assetsMemory: { mainCss: string; printCss: string; themeUsed: string } | null = null;
   let presentation = await loadPresentation(absoluteInputPath);
-  currentHTML = await generator.generate(presentation);
+  const initial = await generator.generate(presentation);
+  if (typeof initial === "string") {
+    currentHTML = initial;
+  } else {
+    currentHTML = initial.html;
+    assetsMemory = initial.assets;
+  }
 
   // Clients for HMR
   const clients = new Set<ReadableStreamDefaultController>();
@@ -23,7 +31,14 @@ export async function startServer(inputPath: string, port: number) {
     console.log(`File changed: ${filename}. Rebuilding...`);
     try {
       presentation = await loadPresentation(absoluteInputPath);
-      currentHTML = await generator.generate(presentation);
+      const result = await generator.generate(presentation);
+      if (typeof result === "string") {
+        currentHTML = result;
+        assetsMemory = null;
+      } else {
+        currentHTML = result.html;
+        assetsMemory = result.assets;
+      }
 
       // Notify clients
       for (const controller of clients) {
@@ -63,8 +78,23 @@ export async function startServer(inputPath: string, port: number) {
       // Serve HTML
       if (url.pathname === "/" || url.pathname === "/presenter") {
         return new Response(currentHTML, {
-          headers: { "Content-Type": "text/html" },
+          headers: { "Content-Type": "text/html", "Cache-Control": "no-cache" },
         });
+      }
+
+      // Serve in-memory CSS assets for serve mode
+      if (url.pathname === "/assets/styles.css") {
+        if (assetsMemory?.mainCss) {
+          return new Response(assetsMemory.mainCss, { headers: { "Content-Type": "text/css" } });
+        }
+        return new Response("Not Found", { status: 404 });
+      }
+
+      if (url.pathname === "/assets/print.css") {
+        if (assetsMemory?.printCss) {
+          return new Response(assetsMemory.printCss, { headers: { "Content-Type": "text/css" } });
+        }
+        return new Response("Not Found", { status: 404 });
       }
 
       // Static assets (images, etc) relative to markdown file

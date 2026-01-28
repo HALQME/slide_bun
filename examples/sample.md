@@ -1,7 +1,7 @@
 ---
 title: 機能網羅デモ
 author: Slide Bun User
-theme: default
+theme: dark
 aspectRatio: 16/9
 ---
 

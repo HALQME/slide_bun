@@ -33,8 +33,9 @@ export async function build(inputPath: string, options: CLIOptions): Promise<str
     const runtimeJs = await buildResult.outputs[0]!.text();
 
     // 3. Generate HTML
-    const renderer = new HTMLRenderer({ enableMinify: options.minify });
-    const html = await renderer.generate(presentation, runtimeJs);
+    const renderer = new HTMLRenderer({ enableMinify: options.minify, inlineAssets: true });
+    const result = await renderer.generate(presentation, runtimeJs);
+    const html = typeof result === "string" ? result : result.html;
 
     // 4. Write Output
     await Bun.write(outputPath, html);

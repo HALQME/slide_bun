@@ -4,11 +4,18 @@ import type { Presentation } from "../types";
 export class ServerHTMLGenerator {
   private renderer: HTMLRenderer;
 
-  constructor(options: { enableMinify?: boolean } = {}) {
-    this.renderer = new HTMLRenderer({ enableMinify: options.enableMinify });
+  constructor(options: { enableMinify?: boolean; inlineAssets?: boolean } = {}) {
+    this.renderer = new HTMLRenderer({
+      enableMinify: options.enableMinify,
+      inlineAssets: options.inlineAssets,
+    });
   }
 
-  async generate(presentation: Presentation): Promise<string> {
+  async generate(
+    presentation: Presentation,
+  ): Promise<
+    string | { html: string; assets: { mainCss: string; printCss: string; themeUsed: string } }
+  > {
     const buildResult = await Bun.build({
       entrypoints: ["src/client/runtime-server.ts"],
       target: "browser",
