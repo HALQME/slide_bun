@@ -130,74 +130,106 @@ export class HTMLRenderer {
     slidesHtml: string,
     runtimeScript: string,
   ): string | { html: string; assets: { mainCss: string; printCss: string; themeCss: string } } {
-    // Minify CSS assets
-    const minifiedThemeCss = this.minifier.minifyCSS(assets.themeUsed);
-    const minifiedMainCss = this.minifier.minifyCSS(assets.mainCss);
-    const minifiedPrintCss = this.minifier.minifyCSS(assets.printCss);
+    const minifiedAssets = this.minifyAssets(assets);
 
     if (this.inlineAssets) {
-      const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${config.title}</title>
-<style>
-${minifiedThemeCss}${minifiedMainCss}${minifiedPrintCss}
-</style>
-</head>
-<body${config.fontSize ? ` class="${config.fontSize}"` : ""}>
-<div class="slide-viewport">
-<div id="slide-container">
-${slidesHtml}
-</div>
-</div>
-<script>
-${runtimeScript}
-</script>
-</body>
-</html>`;
-
-      // Always remove HTML comments (regardless of minify setting)
-      const simplifyed = this.minifier.removeComments(html).replace(/^(\s+|\t)/gm, "");
-
-      // Minify final HTML if enabled
-      return this.enableMinify ? this.minifier.minify(simplifyed) : simplifyed;
+      const html = this.buildInlineHTML(config, minifiedAssets, slidesHtml, runtimeScript);
+      return this.processFinalHTML(html);
     }
 
-    // Externalize assets: return HTML that links to static asset paths and include minified CSS in the returned assets
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${config.title}</title>
-<link rel="stylesheet" href="/assets/styles.css">
-<link rel="stylesheet" href="/assets/theme.css">
-<link rel="stylesheet" href="/assets/print.css" media="print">
-</head>
-<body${config.fontSize ? ` class="${config.fontSize}"` : ""}>
-<div class="slide-viewport">
-<div id="slide-container">
-${slidesHtml}
-</div>
-</div>
-<script>
-${runtimeScript}
-</script>
-</body>
-</html>`;
+    return this.buildExternalHTML(config, minifiedAssets, slidesHtml, runtimeScript);
+  }
 
-    const simplifyed = this.minifier.removeComments(html).replace(/^(\s+|\t)/gm, "");
-    const finalHtml = this.enableMinify ? this.minifier.minify(simplifyed) : simplifyed;
+  private minifyAssets(assets: Awaited<ReturnType<typeof this.loadAssets>>) {
+    return {
+      themeCss: this.minifier.minifyCSS(assets.themeUsed),
+      mainCss: this.minifier.minifyCSS(assets.mainCss),
+      printCss: this.minifier.minifyCSS(assets.printCss),
+    };
+  }
+
+  private buildInlineHTML(
+    config: { title: string; theme: string; fontSize: string },
+    minifiedAssets: ReturnType<typeof this.minifyAssets>,
+    slidesHtml: string,
+    runtimeScript: string,
+  ): string {
+    const inlineStyles = `${minifiedAssets.themeCss}${minifiedAssets.mainCss}${minifiedAssets.printCss}`;
+
+    return this.createHTMLTemplate({
+      config,
+      headContent: `<style>${inlineStyles}</style>`,
+      bodyContent: this.buildBodyContent(slidesHtml, runtimeScript),
+    });
+  }
+
+  private buildExternalHTML(
+    config: { title: string; theme: string; fontSize: string },
+    minifiedAssets: ReturnType<typeof this.minifyAssets>,
+    slidesHtml: string,
+    runtimeScript: string,
+  ) {
+    const headContent = `
+      <link rel="stylesheet" href="/assets/styles.css">
+      <link rel="stylesheet" href="/assets/theme.css">
+      <link rel="stylesheet" href="/assets/print.css" media="print">
+    `.trim();
+
+    const html = this.createHTMLTemplate({
+      config,
+      headContent,
+      bodyContent: this.buildBodyContent(slidesHtml, runtimeScript),
+    });
+
+    const processedHTML = this.processFinalHTML(html);
 
     return {
-      html: finalHtml,
-      assets: {
-        mainCss: minifiedMainCss,
-        printCss: minifiedPrintCss,
-        themeCss: minifiedThemeCss,
-      },
+      html: processedHTML,
+      assets: minifiedAssets,
     };
+  }
+
+  private createHTMLTemplate({
+    config,
+    headContent,
+    bodyContent,
+  }: {
+    config: { title: string; theme: string; fontSize: string };
+    headContent: string;
+    bodyContent: string;
+  }): string {
+    const bodyClass = config.fontSize ? ` class="${config.fontSize}"` : "";
+
+    return `<!DOCTYPE html>
+      <html lang="en">
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${config.title}</title>
+      ${headContent}
+      </head>
+      <body${bodyClass}>
+      ${bodyContent}
+      </body>
+      </html>`;
+  }
+
+  private buildBodyContent(slidesHtml: string, runtimeScript: string): string {
+    return `<div class="slide-viewport">
+      <div id="slide-container">
+      ${slidesHtml}
+      </div>
+      </div>
+      <script>
+      ${runtimeScript}
+      </script>`;
+  }
+
+  private processFinalHTML(html: string): string {
+    // 常にHTMLコメントを削除（minify設定に関わらず）
+    const withoutComments = this.minifier.removeComments(html).replace(/^(\s+|\t)/gm, "");
+
+    // minifyが有効な場合は最終的なHTMLを最小化
+    return this.enableMinify ? this.minifier.minify(withoutComments) : withoutComments;
   }
 }
