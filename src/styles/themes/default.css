@@ -22,4 +22,11 @@
   /* === Theme Layout Values === */
   --theme-slide-width: 1280px;
   --theme-slide-height: 720px;
+
+  /* === Theme Font Size Values === */
+  --theme-font-size-h1: 2.5em;
+  --theme-font-size-h2: 2em;
+  --theme-font-size-h3: 1.5em;
+  --theme-font-size-body: 1em;
+  --theme-font-size-code: 0.8em;
 }

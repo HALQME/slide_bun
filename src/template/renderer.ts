@@ -49,10 +49,15 @@ export class HTMLRenderer {
     return marked;
   }
 
-  private extractConfig(meta: PresentationMeta): { title: string; theme: string } {
+  private extractConfig(meta: PresentationMeta): {
+    title: string;
+    theme: string;
+    fontSize: string;
+  } {
     return {
       title: meta.title ?? DEFAULT_TITLE,
       theme: meta.theme ?? DEFAULT_THEME,
+      fontSize: meta.fontSize ? `font-size-${meta.fontSize.toLowerCase()}` : "",
     };
   }
 
@@ -65,15 +70,6 @@ export class HTMLRenderer {
       throw new Error("Main CSS file not found: src/styles/styles.css");
     }
 
-    // Check if the requested theme exists
-    let themeToUse = theme;
-    try {
-      await Bun.file(`src/styles/themes/${theme}.css`).text();
-    } catch {
-      console.warn(`Theme "${theme}" not found, falling back to ${DEFAULT_THEME}`);
-      themeToUse = DEFAULT_THEME;
-    }
-
     // Resolve @import statements by reading the files and replacing them
     const importRegex = /@import url\("([^"]+)"\);/g;
     let resolvedCss = mainCss;
@@ -81,15 +77,26 @@ export class HTMLRenderer {
 
     const matches: Array<{ full: string; path: string }> = [];
     let match: RegExpExecArray | null;
+    let themeToUse = theme;
+
     while ((match = importRegex.exec(mainCss)) !== null) {
       if (match[1]) {
         const importPath = match[1];
         const fullImportPath = `src/styles/${importPath}`;
 
-        // For theme imports, use the resolved theme
-        const actualImportPath = importPath.includes("themes/default.css")
-          ? `src/styles/themes/${themeToUse}.css`
-          : fullImportPath;
+        // For theme imports, resolve the theme and check existence
+        let actualImportPath = fullImportPath;
+        if (importPath.includes("themes/default.css")) {
+          actualImportPath = `src/styles/themes/${theme}.css`;
+          try {
+            await Bun.file(actualImportPath).text();
+            themeToUse = theme;
+          } catch {
+            console.warn(`Theme "${theme}" not found, falling back to ${DEFAULT_THEME}`);
+            actualImportPath = `src/styles/themes/${DEFAULT_THEME}.css`;
+            themeToUse = DEFAULT_THEME;
+          }
+        }
 
         matches.push({
           full: match[0],
@@ -152,7 +159,7 @@ export class HTMLRenderer {
   }
 
   private buildHTML(
-    config: { title: string; theme: string },
+    config: { title: string; theme: string; fontSize: string },
     assets: Awaited<ReturnType<typeof this.loadAssets>>,
     slidesHtml: string,
     runtimeScript: string,
@@ -172,7 +179,7 @@ export class HTMLRenderer {
 ${minifiedMainCss}${minifiedPrintCss}
 </style>
 </head>
-<body>
+<body${config.fontSize ? ` class="${config.fontSize}"` : ""}>
 <div class="slide-viewport">
 <div id="slide-container">
 ${slidesHtml}

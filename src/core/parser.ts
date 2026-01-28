@@ -42,6 +42,7 @@ export class MarkdownParser {
       theme: data.theme || "default",
       mode: data.mode, // 'light' | 'dark' | 'auto'
       aspectRatio: data.aspectRatio,
+      fontSize: data.fontSize, // 'XS' | 'S' | 'M' | 'L' | 'XL'
       ...data, // Include other frontmatter data
     };
 

@@ -19,4 +19,11 @@
   /* === Layout Variables === */
   --slide-width: var(--theme-slide-width, 1280px);
   --slide-height: var(--theme-slide-height, 720px);
+
+  /* === Theme Font Size Scale Values === */
+  --theme-font-scale-xs: 0.85;
+  --theme-font-scale-s: 0.925;
+  --theme-font-scale-m: 1;
+  --theme-font-scale-l: 1.15;
+  --theme-font-scale-xl: 1.3;
 }

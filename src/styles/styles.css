@@ -1,14 +1,14 @@
 /* CSS Variables Definition */
 @import url("themes/variables.css");
 
-/* Theme-specific values */
-@import url("themes/default.css");
-
 /* Base styles */
 @import url("base/reset.css");
 @import url("base/layout.css");
 @import url("base/typography.css");
 @import url("base/components.css");
+
+/* Theme-specific values (overrides base styles) */
+@import url("themes/default.css");
 
 /* Utility classes */
 @import url("utilities.css");

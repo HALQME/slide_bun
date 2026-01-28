@@ -12,6 +12,7 @@ export interface PresentationMeta {
   theme?: string;
   mode?: "light" | "dark" | "auto"; // ダークモード対応
   aspectRatio?: string;
+  fontSize?: "XS" | "S" | "M" | "L" | "XL"; // フォントサイズプリセット
   [key: string]: unknown; // その他のFrontmatterも許容
 }
 
