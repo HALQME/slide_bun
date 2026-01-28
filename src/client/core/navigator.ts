@@ -15,9 +15,6 @@ export class SlideNavigator {
     this.minScale = options.minScale || 0.6;
     this.onSlideChange = options.onSlideChange;
 
-    // Indicate JS is active
-    document.body.classList.add("js-active");
-
     // Bind methods
     this.handleResize = this.handleResize.bind(this);
     this.handleOrientation = this.handleOrientation.bind(this);

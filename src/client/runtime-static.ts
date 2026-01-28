@@ -53,5 +53,8 @@ document.addEventListener("DOMContentLoaded", () => {
     updateHash();
   }
 
+  // Indicate JS is active after initial setup to avoid FOUC/blank screen
+  document.body.classList.add("js-active");
+
   window.addEventListener("hashchange", handleHash);
 });

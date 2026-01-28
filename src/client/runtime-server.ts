@@ -115,6 +115,9 @@ function setupClientMode(channel: BroadcastChannel | null) {
     navigator.goTo(0);
   }
 
+  // Indicate JS is active after initial setup
+  document.body.classList.add("js-active");
+
   window.addEventListener("hashchange", handleHash);
 }
 
