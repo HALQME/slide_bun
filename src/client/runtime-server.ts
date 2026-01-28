@@ -110,9 +110,18 @@ function setupClientMode(channel: BroadcastChannel | null) {
 
   // Initialize
   if (window.location.hash) {
-    handleHash();
+    const hash = window.location.hash.substring(1);
+    const index = parseInt(hash, 10);
+    if (!isNaN(index) && index >= 1 && index <= navigator.totalSlides) {
+      // Force rendering on initial load even if index is 0
+      navigator.goTo(index - 1);
+    } else {
+      navigator.goTo(0);
+      updateHash(0);
+    }
   } else {
     navigator.goTo(0);
+    updateHash(0);
   }
 
   // Indicate JS is active after initial setup
