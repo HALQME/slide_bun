@@ -94,11 +94,14 @@ body {
   pointer-events: auto;
 
   /* Final font-size calculation:
-     base 16px × responsive base scale × per-slide font scale
-     - --slide-base-scale is computed to fit the viewport while maintaining aspect ratio
-     - --slide-font-scale is provided per-slide (via generator), default 1
-  */
-  font-size: calc(16px * var(--slide-base-scale, 1) * var(--slide-font-scale, 1));
+      base 16px × responsive base scale × per-slide font scale × text scale
+      - --slide-base-scale is computed to fit the viewport while maintaining aspect ratio
+      - --slide-font-scale is provided per-slide (via generator), default 1
+      - --text-scale is computed dynamically by navigator to fit content, default 1
+   */
+  font-size: calc(
+    16px * var(--slide-base-scale, 1) * var(--slide-font-scale, 1) * var(--text-scale, 1)
+  );
 }
 
 /* Media constraints: images/videos/iframes fit within slide bounds */
@@ -250,5 +253,27 @@ pre code {
   }
   .columns .col {
     width: 100%;
+  }
+}
+
+/* Responsive adjustments for tablets */
+@media (max-width: 768px) {
+  :root {
+    --h1-mult: 2.5;
+    --h2-mult: 2;
+    --h3-mult: 1.8;
+    --text-mult: 1.4;
+    --slide-padding: 2em;
+  }
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 480px) {
+  :root {
+    --h1-mult: 2;
+    --h2-mult: 1.5;
+    --h3-mult: 1.5;
+    --text-mult: 1.2;
+    --slide-padding: 1.5em;
   }
 }

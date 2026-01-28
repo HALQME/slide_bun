@@ -12,7 +12,7 @@ export class SlideNavigator {
     const selector = options.slideSelector || ".slide";
     this.slides = Array.from(document.querySelectorAll<HTMLElement>(selector));
     this.container = document.getElementById(options.containerId || "slide-container");
-    this.minScale = options.minScale || 0.6;
+    this.minScale = options.minScale || 0.4;
     this.onSlideChange = options.onSlideChange;
 
     // Bind methods
