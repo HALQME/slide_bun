@@ -89,6 +89,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-height: 0; /* Important for flex container to allow children shrinking */
   opacity: 1;
   pointer-events: auto;
 
@@ -208,7 +209,7 @@ pre code {
   display: flex;
   gap: var(--col-gap);
   margin-top: var(--col-gap);
-  align-items: stretch;
+  align-items: flex-start; /* Prevent stretching images to match text column height */
   width: 100%;
   box-sizing: border-box;
 }
@@ -217,6 +218,7 @@ pre code {
 .columns .col {
   flex: 1 1 0;
   min-width: 0; /* allow children to shrink properly */
+  min-height: 0; /* allow children to shrink vertically properly */
   box-sizing: border-box;
 }
 
@@ -225,6 +227,7 @@ pre code {
 .columns .col video,
 .columns .col iframe {
   max-width: 100%;
+  max-height: 100%; /* Prevent column overflow */
   height: auto;
   display: block;
 }
