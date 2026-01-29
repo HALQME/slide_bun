@@ -164,6 +164,7 @@ export class PresenterUI {
 
     // Update Current Slide
     const currentSrc = `${baseUrl}#${currentIndex + 1}`;
+    console.log("updateViews called:", { currentIndex, totalSlides, currentSrc });
     this.currentFrame.src = currentSrc;
 
     // Update Next Slide

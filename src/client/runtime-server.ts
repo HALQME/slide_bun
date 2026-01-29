@@ -364,6 +364,7 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
   // 4. Methods
   const update = (index: number) => {
     currentIndex = index;
+    console.log("update called:", { index, currentIndex });
     ui.updateViews(index, totalSlides);
     ui.updateNotes(notesMap[index] || "");
   };
@@ -372,11 +373,18 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
   // In presenter mode, we control the remote slides via broadcast
   const navigate = (index: number, shouldUpdateHash: boolean = true) => {
     const target = Math.max(0, Math.min(index, totalSlides - 1));
+    console.log("navigate called:", { index, target, currentIndex, shouldUpdateHash });
     if (target !== currentIndex) {
       update(target);
       if (channel) {
         channel.postMessage({ type: "navigate", index: target });
       }
+      if (shouldUpdateHash) {
+        updateHash(target);
+      }
+    } else {
+      console.log("target === currentIndex, calling update anyway");
+      update(target); // 最初の初期化のため、同じでもupdateを呼ぶ
       if (shouldUpdateHash) {
         updateHash(target);
       }
