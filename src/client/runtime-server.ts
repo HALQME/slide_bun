@@ -111,6 +111,14 @@ function setupClientMode(channel: BroadcastChannel | null) {
   laserPointer.style.userSelect = "none";
   document.body.appendChild(laserPointer);
 
+  // Send initial laser pointer state (inactive) to clear any existing pointer
+  if (channel) {
+    channel.postMessage({
+      type: "pointer",
+      payload: { x: 0, y: 0, active: false, timestamp: Date.now() },
+    } as SyncMessage);
+  }
+
   function updateHash(index: number) {
     window.location.hash = `#${index + 1}`;
   }
