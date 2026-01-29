@@ -612,9 +612,6 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
   // Handle hash changes on the presenter window
   window.addEventListener("hashchange", handleHash);
 
-  // Initialize
-  update(0); // Default to first slide
-
   // Handle hash changes on the presenter window
   window.addEventListener("hashchange", handleHash);
 
@@ -623,7 +620,7 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
     if (window.location.hash) {
       handleHash(); // Initialize from hash if present
     } else {
-      updateHash(0); // Set initial hash
+      navigate(0, true); // Navigate to first slide and update hash
     }
 
     // Initialize laser pointer state in UI
