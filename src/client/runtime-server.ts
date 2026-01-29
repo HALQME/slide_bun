@@ -2,14 +2,21 @@ import { SlideNavigator } from "./core/navigator";
 import { PresenterUI } from "./presenter/ui";
 import type { SyncMessage } from "../types";
 
+// Get slide dimensions from CSS variables
+function getSlideDimensions() {
+  const root = document.documentElement;
+  const slideWidth = parseInt(getComputedStyle(root).getPropertyValue("--slide-width") || "1280");
+  const slideHeight = parseInt(getComputedStyle(root).getPropertyValue("--slide-height") || "720");
+  return { slideWidth, slideHeight };
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // Calculate and apply viewport scale immediately to prevent resize flicker
   function updateViewportScale() {
     const container = document.getElementById("slide-container");
     if (!container) return;
 
-    const slideWidth = 1280;
-    const slideHeight = 720;
+    const { slideWidth, slideHeight } = getSlideDimensions();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
@@ -94,21 +101,48 @@ function setupClientMode(channel: BroadcastChannel | null) {
   const interpolationFactor = 0.2; // Smoothing factor
   const maxPacketAge = 500; // Max age of packets in ms
 
+  // Function to calculate laser pointer size based on viewport scale
+  function calculateLaserPointerSize(): number {
+    const { slideWidth, slideHeight } = getSlideDimensions();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    const scaleX = viewportWidth / slideWidth;
+    const scaleY = viewportHeight / slideHeight;
+    const scale = Math.min(scaleX, scaleY);
+
+    // Base size in pixels (relative to original slide dimensions)
+    const baseSize = 12; // Base size in viewport pixels
+    const scaledSize = baseSize * scale;
+
+    // Ensure minimum and maximum sizes for usability
+    return Math.max(6, Math.min(scaledSize, 30));
+  }
+
+  // Function to update laser pointer size
+  function updateLaserPointerSize() {
+    const size = calculateLaserPointerSize();
+    laserPointer.style.width = `${size}px`;
+    laserPointer.style.height = `${size}px`;
+    laserPointer.style.boxShadow = `0 0 ${size * 2}px #ff000050, 0 0 ${size * 1.5}px #ff0000`;
+  }
+
   // Create laser pointer element
   const laserPointer = document.createElement("div");
   laserPointer.id = "laser-pointer";
   laserPointer.style.position = "fixed";
-  laserPointer.style.width = "12px";
-  laserPointer.style.height = "12px";
   laserPointer.style.borderRadius = "50%";
   laserPointer.style.backgroundColor = "#ff0000";
-  laserPointer.style.boxShadow = "0 0 8px #ff0000, 0 0 16px #ff0000";
   laserPointer.style.pointerEvents = "none";
   laserPointer.style.zIndex = "9999";
   laserPointer.style.transform = "translate(-50%, -50%)";
   laserPointer.style.transition = "opacity 0.2s";
   laserPointer.style.opacity = "0"; // Initially hidden
   laserPointer.style.userSelect = "none";
+
+  // Set initial size
+  updateLaserPointerSize();
+
   document.body.appendChild(laserPointer);
 
   // Send initial laser pointer state (inactive) to clear any existing pointer
@@ -173,9 +207,8 @@ function setupClientMode(channel: BroadcastChannel | null) {
         if (slideContainer) {
           const containerRect = slideContainer.getBoundingClientRect();
 
-          // Default slide dimensions (must match the scale calculation at top of file)
-          const slideWidth = 1280;
-          const slideHeight = 720;
+          // Get slide dimensions from CSS variables
+          const { slideWidth, slideHeight } = getSlideDimensions();
           const slideAspectRatio = slideWidth / slideHeight;
 
           // Calculate the actual slide display area (letterboxed if needed)
@@ -225,9 +258,8 @@ function setupClientMode(channel: BroadcastChannel | null) {
     if (slideContainer && isActive) {
       const containerRect = slideContainer.getBoundingClientRect();
 
-      // Default slide dimensions (must match the scale calculation at top of file)
-      const slideWidth = 1280;
-      const slideHeight = 720;
+      // Get slide dimensions from CSS variables
+      const { slideWidth, slideHeight } = getSlideDimensions();
       const slideAspectRatio = slideWidth / slideHeight;
 
       // Calculate the actual slide display area (letterboxed if needed)
@@ -258,9 +290,10 @@ function setupClientMode(channel: BroadcastChannel | null) {
     }
   }
 
-  // Add resize listener to adjust laser pointer position
+  // Add resize listener to adjust laser pointer position and size
   window.addEventListener("resize", () => {
     updateLaserPointerPosition();
+    updateLaserPointerSize();
   });
 
   // Start the animation loop
@@ -352,6 +385,15 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
   // Store reference to UI globally so it can be accessed by event handlers
   (window as any).__presenterUI = ui;
 
+  // Store navigation functions globally for UI buttons
+  (window as any).__navigateNext = () => {
+    navigate(currentIndex + 1);
+  };
+
+  (window as any).__navigatePrevious = () => {
+    navigate(currentIndex - 1);
+  };
+
   // 3. State
   let currentIndex = 0;
 
@@ -425,43 +467,44 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
   // Normalize coordinates to 0-1 range based on the actual slide display area
   const normalizeCoordinates = (clientX: number, clientY: number) => {
     // In presenter mode, we need to calculate the actual slide display area
-    // The slide is scaled to fit within #presenter-current while maintaining aspect ratio
+    // The slide is scaled to fit within the iframe in #presenter-current while maintaining aspect ratio
     const currentView = document.getElementById("presenter-current");
+    const currentFrame = document.querySelector("#presenter-current iframe") as HTMLIFrameElement;
 
-    if (!currentView) return { x: 0, y: 0, valid: false };
+    if (!currentView || !currentFrame) return { x: 0, y: 0, valid: false };
 
-    const containerRect = currentView.getBoundingClientRect();
+    // Get the iframe rect (this is where the slide is actually displayed)
+    const frameRect = currentFrame.getBoundingClientRect();
 
-    // Default slide dimensions (from runtime-server.ts viewport scale calculation)
-    const slideWidth = 1280;
-    const slideHeight = 720;
+    // Get slide dimensions from CSS variables
+    const { slideWidth, slideHeight } = getSlideDimensions();
     const slideAspectRatio = slideWidth / slideHeight;
 
-    // Calculate the actual slide display area (letterboxed if needed)
-    const containerAspectRatio = containerRect.width / containerRect.height;
+    // Calculate the actual slide display area within the iframe (letterboxed if needed)
+    const frameAspectRatio = frameRect.width / frameRect.height;
 
     let actualSlideWidth: number;
     let actualSlideHeight: number;
     let slideOffsetX: number;
     let slideOffsetY: number;
 
-    if (containerAspectRatio > slideAspectRatio) {
-      // Container is wider - slide is constrained by height
-      actualSlideHeight = containerRect.height;
+    if (frameAspectRatio > slideAspectRatio) {
+      // Frame is wider - slide is constrained by height
+      actualSlideHeight = frameRect.height;
       actualSlideWidth = actualSlideHeight * slideAspectRatio;
-      slideOffsetX = (containerRect.width - actualSlideWidth) / 2;
+      slideOffsetX = (frameRect.width - actualSlideWidth) / 2;
       slideOffsetY = 0;
     } else {
-      // Container is taller - slide is constrained by width
-      actualSlideWidth = containerRect.width;
+      // Frame is taller - slide is constrained by width
+      actualSlideWidth = frameRect.width;
       actualSlideHeight = actualSlideWidth / slideAspectRatio;
       slideOffsetX = 0;
-      slideOffsetY = (containerRect.height - actualSlideHeight) / 2;
+      slideOffsetY = (frameRect.height - actualSlideHeight) / 2;
     }
 
-    // Calculate position relative to the actual slide display area
-    const relativeX = clientX - containerRect.left - slideOffsetX;
-    const relativeY = clientY - containerRect.top - slideOffsetY;
+    // Calculate position relative to the actual slide display area within the iframe
+    const relativeX = clientX - frameRect.left - slideOffsetX;
+    const relativeY = clientY - frameRect.top - slideOffsetY;
 
     // Normalize to 0-1 range
     const x = relativeX / actualSlideWidth;

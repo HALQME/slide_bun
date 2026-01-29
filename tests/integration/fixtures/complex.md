@@ -2,6 +2,7 @@
 title: Integration Test Slide
 theme: default
 fontSize: M
+aspectRatio: 4:3
 ---
 
 # Slide 1

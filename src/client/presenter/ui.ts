@@ -7,13 +7,12 @@ export class PresenterUI {
   private notesContainer: HTMLElement;
   private clockElement: HTMLElement;
   private timerElement: HTMLElement;
-  private laserPointerOverlay: HTMLElement | null = null;
-  private laserPointerElement: HTMLElement | null = null;
+  private slideInfoElement: HTMLElement;
+  private progressBarElement: HTMLElement;
   private startTime: number;
   private timerInterval: number | null = null;
   private isPaused: boolean = false;
   private pausedTime: number = 0;
-  private isLaserPointerActive: boolean = false;
 
   constructor() {
     this.container = document.createElement("div");
@@ -29,8 +28,36 @@ export class PresenterUI {
     const header = document.createElement("div");
     header.id = "presenter-header";
 
+    // Left side: Clock and Slide Info
+    const headerLeft = document.createElement("div");
+    headerLeft.className = "presenter-header-left";
+
     this.clockElement = document.createElement("div");
     this.clockElement.id = "presenter-clock";
+
+    this.slideInfoElement = document.createElement("div");
+    this.slideInfoElement.id = "presenter-slide-info";
+    this.slideInfoElement.innerHTML =
+      '<span class="current-slide">1</span> / <span class="total-slides">1</span>';
+
+    headerLeft.appendChild(this.clockElement);
+    headerLeft.appendChild(this.slideInfoElement);
+
+    // Center: Progress Bar
+    const headerCenter = document.createElement("div");
+    headerCenter.className = "presenter-header-center";
+
+    this.progressBarElement = document.createElement("div");
+    this.progressBarElement.id = "presenter-progress-bar";
+    const progressFill = document.createElement("div");
+    progressFill.className = "progress-fill";
+    this.progressBarElement.appendChild(progressFill);
+
+    headerCenter.appendChild(this.progressBarElement);
+
+    // Right side: Timer
+    const headerRight = document.createElement("div");
+    headerRight.className = "presenter-header-right";
 
     const timerWrapper = document.createElement("div");
     timerWrapper.id = "presenter-timer";
@@ -45,35 +72,67 @@ export class PresenterUI {
     pauseBtn.textContent = "Pause";
     pauseBtn.onclick = () => this.toggleTimer(pauseBtn);
 
-    // Add laser pointer toggle button
-    const laserToggleBtn = document.createElement("button");
-    laserToggleBtn.id = "laser-pointer-toggle";
-    laserToggleBtn.textContent = "🔴"; // Red circle when inactive
-    laserToggleBtn.title = "レーザーポインター (クリックでON/OFF)";
-    // Add event listener to the laser toggle button
-    laserToggleBtn.addEventListener("click", (e) => {
-      e.stopPropagation(); // Prevent event bubbling
-      // Toggle the laser pointer state by calling the presenter mode function directly
-      if ((window as any).__togglePresenterPointer) {
-        (window as any).__togglePresenterPointer();
-      }
-    });
-
     timerControls.appendChild(pauseBtn);
     timerControls.appendChild(resetBtn);
-    timerControls.appendChild(laserToggleBtn); // Add toggle button
     timerWrapper.appendChild(this.timerElement);
     timerWrapper.appendChild(timerControls);
 
-    header.appendChild(this.clockElement);
-    header.appendChild(timerWrapper);
+    headerRight.appendChild(timerWrapper);
+
+    header.appendChild(headerLeft);
+    header.appendChild(headerCenter);
+    header.appendChild(headerRight);
 
     // Current Slide
     const currentView = document.createElement("div");
     currentView.id = "presenter-current";
     this.currentFrame = document.createElement("iframe");
     // Initial src is empty to avoid race condition with hash update
+
+    // Slide controls container
+    const slideControls = document.createElement("div");
+    slideControls.id = "presenter-slide-controls";
+
+    // Previous slide button
+    const prevBtn = document.createElement("button");
+    prevBtn.id = "prev-slide-btn";
+    prevBtn.innerHTML = "←";
+    prevBtn.title = "前のスライド (←)";
+    prevBtn.onclick = () => {
+      if ((window as any).__navigatePrevious) {
+        (window as any).__navigatePrevious();
+      }
+    };
+
+    // Next slide button
+    const nextBtn = document.createElement("button");
+    nextBtn.id = "next-slide-btn";
+    nextBtn.innerHTML = "→";
+    nextBtn.title = "次のスライド (→)";
+    nextBtn.onclick = () => {
+      if ((window as any).__navigateNext) {
+        (window as any).__navigateNext();
+      }
+    };
+
+    // Laser pointer toggle button for slide area
+    const laserSlideBtn = document.createElement("button");
+    laserSlideBtn.id = "laser-slide-btn";
+    laserSlideBtn.innerHTML = "🔴";
+    laserSlideBtn.title = "レーザーポインター (クリックでON/OFF)";
+    laserSlideBtn.onclick = (e) => {
+      e.stopPropagation();
+      if ((window as any).__togglePresenterPointer) {
+        (window as any).__togglePresenterPointer();
+      }
+    };
+
+    slideControls.appendChild(prevBtn);
+    slideControls.appendChild(nextBtn);
+    slideControls.appendChild(laserSlideBtn);
+
     currentView.appendChild(this.currentFrame);
+    currentView.appendChild(slideControls);
 
     // Next Slide
     const nextView = document.createElement("div");
@@ -109,54 +168,11 @@ export class PresenterUI {
     document.body.appendChild(this.container);
     document.body.classList.add("mode-presenter");
 
-    // Initialize laser pointer overlay
-    this.setupLaserPointerOverlay();
-
     this.startClock();
     this.startTimer();
 
     // Focus to capture keyboard events immediately
     this.container.focus();
-
-    // Initialize laser pointer state after UI is mounted
-    setTimeout(() => {
-      if ((window as any).__presenterUI) {
-        ((window as any).__presenterUI as any).updateLaserPointerStatus(false);
-      }
-    }, 0);
-  }
-
-  private setupLaserPointerOverlay() {
-    const currentView = document.getElementById("presenter-current");
-    if (!currentView) return;
-
-    // Create overlay container
-    this.laserPointerOverlay = document.createElement("div");
-    this.laserPointerOverlay.id = "laser-pointer-overlay";
-
-    // Create laser pointer element
-    this.laserPointerElement = document.createElement("div");
-    this.laserPointerElement.id = "presenter-laser-pointer";
-
-    this.laserPointerOverlay.appendChild(this.laserPointerElement);
-    currentView.appendChild(this.laserPointerOverlay);
-  }
-
-  public updateLaserPointerPosition(x: number, y: number, active: boolean) {
-    if (!this.laserPointerElement || !this.laserPointerOverlay) return;
-
-    // Convert normalized coordinates (0-1) to percentage
-    const percentX = x * 100;
-    const percentY = y * 100;
-
-    this.laserPointerElement.style.left = `${percentX}%`;
-    this.laserPointerElement.style.top = `${percentY}%`;
-
-    if (active) {
-      this.laserPointerElement.classList.add("active");
-    } else {
-      this.laserPointerElement.classList.remove("active");
-    }
   }
 
   public updateViews(currentIndex: number, totalSlides: number) {
@@ -171,6 +187,28 @@ export class PresenterUI {
     const nextIndex = Math.min(currentIndex + 1, totalSlides - 1);
     const nextSrc = `${baseUrl}#${nextIndex + 1}`;
     this.nextFrame.src = nextSrc;
+
+    // Update slide info
+    this.updateSlideInfo(currentIndex + 1, totalSlides);
+
+    // Update progress bar
+    this.updateProgressBar(currentIndex + 1, totalSlides);
+  }
+
+  private updateSlideInfo(current: number, total: number) {
+    const currentSlideEl = this.slideInfoElement.querySelector(".current-slide");
+    const totalSlidesEl = this.slideInfoElement.querySelector(".total-slides");
+
+    if (currentSlideEl) currentSlideEl.textContent = current.toString();
+    if (totalSlidesEl) totalSlidesEl.textContent = total.toString();
+  }
+
+  private updateProgressBar(current: number, total: number) {
+    const progressFill = this.progressBarElement.querySelector(".progress-fill") as HTMLElement;
+    if (progressFill && total > 0) {
+      const progress = (current / total) * 100;
+      progressFill.style.width = `${progress}%`;
+    }
   }
 
   public updateNotes(notesHtml: string) {
@@ -224,23 +262,17 @@ export class PresenterUI {
   }
 
   public updateLaserPointerStatus(active: boolean) {
-    // Only update if the state has actually changed
-    if (this.isLaserPointerActive !== active) {
-      this.isLaserPointerActive = active;
-      const laserToggleBtn = document.getElementById("laser-pointer-toggle") as HTMLButtonElement;
-      if (laserToggleBtn) {
-        if (active) {
-          laserToggleBtn.textContent = "🟢"; // Green circle when active
-          laserToggleBtn.title = "レーザーポインター (クリックでOFF)";
-        } else {
-          laserToggleBtn.textContent = "🔴"; // Red circle when inactive
-          laserToggleBtn.title = "レーザーポインター (クリックでON)";
-        }
+    const laserSlideBtn = document.getElementById("laser-slide-btn") as HTMLButtonElement;
+    if (laserSlideBtn) {
+      if (active) {
+        laserSlideBtn.innerHTML = "🔴";
+        laserSlideBtn.title = "レーザーポインター (クリックでOFF)";
+        laserSlideBtn.classList.add("active");
+      } else {
+        laserSlideBtn.innerHTML = "⚪";
+        laserSlideBtn.title = "レーザーポインター (クリックでON)";
+        laserSlideBtn.classList.remove("active");
       }
     }
-  }
-
-  public getLaserPointerStatus(): boolean {
-    return this.isLaserPointerActive;
   }
 }

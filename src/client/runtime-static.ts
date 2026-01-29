@@ -3,13 +3,22 @@ import { SlideNavigator } from "./core/navigator";
 document.addEventListener("DOMContentLoaded", () => {
   const navigator = new SlideNavigator();
 
+  // Get slide dimensions from CSS variables
+  function getSlideDimensions() {
+    const root = document.documentElement;
+    const slideWidth = parseInt(getComputedStyle(root).getPropertyValue("--slide-width") || "1280");
+    const slideHeight = parseInt(
+      getComputedStyle(root).getPropertyValue("--slide-height") || "720",
+    );
+    return { slideWidth, slideHeight };
+  }
+
   // Calculate and apply viewport scale immediately to prevent resize flicker
   function updateViewportScale() {
     const container = document.getElementById("slide-container");
     if (!container) return;
 
-    const slideWidth = 1280;
-    const slideHeight = 720;
+    const { slideWidth, slideHeight } = getSlideDimensions();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 

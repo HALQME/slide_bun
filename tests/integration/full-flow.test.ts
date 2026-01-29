@@ -48,6 +48,11 @@ describe("Integration: Markdown to HTML Generation", () => {
     // Config extraction adds 'font-size-' prefix. So 'M' -> 'font-size-m'.
     expect(html).toContain('class="font-size-m"');
 
+    // 2.1. Aspect Ratio Configuration
+    // 4:3 aspect ratio should be reflected in CSS variables
+    expect(html).toContain("--slide-width: 960px");
+    expect(html).toContain("--slide-height: 720px");
+
     // 3. Slide Content & Splitting
     // Should have 3 slides based on fixtures/complex.md
     // Slide 1
