@@ -617,8 +617,11 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
 
   // Initialize from hash if present, but wait for UI to be ready
   setTimeout(() => {
+    const hash = window.location.hash.substring(1);
+    const initialIndex = hash && parseInt(hash, 10) >= 1 ? parseInt(hash, 10) - 1 : 0;
+
     if (window.location.hash) {
-      handleHash(); // Initialize from hash if present
+      navigate(initialIndex, true); // Navigate to the hash-indexed slide and update hash
     } else {
       navigate(0, true); // Navigate to first slide and update hash
     }
