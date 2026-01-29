@@ -347,6 +347,34 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
   // 3. State
   let currentIndex = 0;
 
+  // Pointer state
+  let isPointerActive = false; // Whether the mouse is currently over the slide
+  let isLaserPointerOn = false; // Whether the laser pointer is turned on
+  let lastPointerSendTime = 0;
+  const pointerSendInterval = 33; // ~30fps (33ms interval)
+
+  // 4. Methods
+  const update = (index: number) => {
+    currentIndex = index;
+    ui.updateViews(index, totalSlides);
+    ui.updateNotes(notesMap[index] || "");
+  };
+
+  // 5. Interaction
+  // In presenter mode, we control the remote slides via broadcast
+  const navigate = (index: number, shouldUpdateHash: boolean = true) => {
+    const target = Math.max(0, Math.min(index, totalSlides - 1));
+    if (target !== currentIndex) {
+      update(target);
+      if (channel) {
+        channel.postMessage({ type: "navigate", index: target });
+      }
+      if (shouldUpdateHash) {
+        updateHash(target);
+      }
+    }
+  };
+
   // Hash update helper
   const updateHash = (index: number) => {
     window.location.hash = `#${index + 1}`;
@@ -362,19 +390,6 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
         navigate(targetIndex, false); // Don't update hash to avoid loop
       }
     }
-  };
-
-  // Pointer state
-  let isPointerActive = false; // Whether the mouse is currently over the slide
-  let isLaserPointerOn = false; // Whether the laser pointer is turned on
-  let lastPointerSendTime = 0;
-  const pointerSendInterval = 33; // ~30fps (33ms interval)
-
-  // 4. Methods
-  const update = (index: number) => {
-    currentIndex = index;
-    ui.updateViews(index, totalSlides);
-    ui.updateNotes(notesMap[index] || "");
   };
 
   // Send pointer position to clients
@@ -522,20 +537,7 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
     }
   };
 
-  // 5. Interaction
-  // In presenter mode, we control the remote slides via broadcast
-  const navigate = (index: number, shouldUpdateHash: boolean = true) => {
-    const target = Math.max(0, Math.min(index, totalSlides - 1));
-    if (target !== currentIndex) {
-      update(target);
-      if (channel) {
-        channel.postMessage({ type: "navigate", index: target });
-      }
-      if (shouldUpdateHash) {
-        updateHash(target);
-      }
-    }
-  };
+  // Keyboard event handlers already defined above, no need to redefine navigate
 
   document.addEventListener("keydown", (e) => {
     switch (e.key) {
@@ -606,7 +608,7 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
   if (window.location.hash) {
     handleHash(); // Initialize from hash if present
   } else {
-    navigate(0, false); // Default to first slide without updating hash
+    update(0); // Default to first slide
     updateHash(0); // Set initial hash
   }
 
