@@ -70,6 +70,13 @@ export const styledParagraphExtension: TokenizerAndRendererExtension = {
         return;
       }
 
+      // Avoid conflict with styled images: ![alt](url)
+      // If the text is exactly an image, let styledImageExtension handle it in the inline phase.
+      // This prevents the paragraph from consuming the attributes meant for the image.
+      if (/^!\[[^\]]*\]\([^)]+\)$/.test(text)) {
+        return;
+      }
+
       const token: StyledParagraphToken = {
         type: "styledParagraph",
         raw: match[0],

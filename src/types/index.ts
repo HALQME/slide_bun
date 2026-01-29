@@ -19,7 +19,7 @@ export interface PresentationMeta {
 /** スライド1枚のデータ */
 export interface Slide {
   id: number;
-  contentTokens: Token[]; // MarkedのToken配列（聴衆用）
+  contentTokens: Token[]; // Marked의 Token配列（聴衆用）
   noteTokens: Token[]; // MarkedのToken配列（ノート用）
   contentLength?: number; // コンテンツ量の指標（テキスト文字数などで推定）
 }
