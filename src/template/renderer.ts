@@ -59,6 +59,28 @@ export class HTMLRenderer {
         styledImageExtension,
         styledParagraphExtension,
       ],
+      renderer: {
+        paragraph(token) {
+          const tokens = token.tokens || [];
+          // Check if paragraph contains only images (standard or styled) and optional whitespace
+          const isOnlyImages = tokens.every(
+            (t) =>
+              t.type === "image" ||
+              t.type === "styledImage" ||
+              (t.type === "text" && t.raw.trim() === ""),
+          );
+
+          const hasImage = tokens.some(
+            (t) => t.type === "image" || t.type === "styledImage",
+          );
+
+          if (hasImage && isOnlyImages) {
+            return this.parser.parseInline(tokens) + "\n";
+          }
+
+          return `<p>${this.parser.parseInline(tokens)}</p>\n`;
+        },
+      },
     });
     return marked;
   }

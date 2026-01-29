@@ -1,146 +1,132 @@
 ---
-title: 機能網羅デモ
-author: Slide Bun User
-theme: dark
+title: Slide Bun 機能紹介
+author: Slide Bun 開発チーム
+theme: default
 aspectRatio: 16/9
+fontSize: M
 ---
 
-# Slide Bun Features {.center}
+# Slide Bun {.center}
 
-全ての機能を詰め込んだデモ・スライドです。
+**Zero-Config Slide Generator**
+Markdownを書くだけで、美しいスライドを自動生成します。
 
-Created by Slide Bun {.caption .right}
+[今すぐ始める]{.mark} {.center}
 
 ::: speaker
-ここからデモ開始。
-まずはタイトルのインパクトを強調。
+スライドの冒頭です。
+Slide Bunは設定不要で使い始められるスライド作成ツールです。
 :::
 
 ---
 
-## 基本的なタイポグラフィ
+## 🚀 主な特徴
 
-Markdownの標準記法がそのまま使えます。
+- **Markdownベース**: 慣れ親しんだ記法でコンテンツを作成
+- **自動レイアウト**: コンテンツ量に合わせてフォントサイズを自動調整
+- **柔軟な拡張**: クラス指定やカラムレイアウトをサポート
+- **高速ビルド**: Bunパワーによる高速なHTML生成
 
-- **強調（Bold）** や _斜体（Italic）_
-- `インラインコード`
-- リンク: [GitHub](https://github.com)
+---
 
-1. 番号付きリスト
-2. もサポート
+## 🎨 タイポグラフィとスタイル
+
+標準的なMarkdownに加え、属性指定が可能です。
+
+### インラインスタイル
+特定の単語を [ハイライト]{.mark} したり、[アクセント]{.accent} をつけたりできます。
+
+### 段落スタイル
+この段落は中央寄せです。 {.center}
+
+この段落は右寄せのキャプションです。 {.caption .right}
 
 ::: speaker
-基本機能の紹介。
+属性指定は `{.class}` の形式で行います。
 :::
 
 ---
 
-## 2カラムレイアウト {.center}
+## 📊 2カラムレイアウト {.center}
 
-`::: columns` で左右に分割できます。
+`::: columns` コンテナを使用して、画面を分割できます。
 
 ::: columns
 :::: col
-
-### 左側
-
-- リスト
-- テキスト
-- 画像など
-
+### 左カラム
+- 箇条書き
+- コンテンツの整理
+- 視覚的な分離
 ::::
+
 :::: col
-
-### 右側
-
-コードブロックも置けます。
-
+### 右カラム
 ```typescript
-const hello = "world";
-console.log(hello);
+// コードもきれいに表示
+const slide = new SlideBun();
+slide.build("presentation.md");
 ```
-
-::::
-:::
-
-この行はカラムレイアウトの影響を受けません。{.bottom}
-
----
-
-## 画像の最適化 (Fit) {.center}
-
-`{.fit}` クラスでスライド内に収めます。
-
-![Placeholder](https://placehold.co/600x400){.fit}
-
-図1: プレースホルダー画像{.caption}
-
----
-
-### テキストユーティリティの例（ハイライト・枠）
-
-テキストの意図（注目・枠付け）を示すためのユーティリティも使えます。  
-インラインで強調したい語句には `[...]` とクラスを併用します（例: `[重要]{.mark}`）。
-
-この段落では [重要]{.mark} な語句をハイライトして表示します。
-
----
-
-### 画像ユーティリティの例（数値指定）
-
-意図的に画像の見た目を調整するために、数値付きユーティリティを使えます。
-
-書式は `{.opacity 60}` のようにクラス名と数値を空白で並べます。
-数値はパーセンテージとして解釈されます。
-
-:::columns
-::::col
-![Muted](https://placehold.co/600x400/00ff55/ffffff){.fit .opacity 60 .gray 80}
-図2: 不透明度60%かつグレースケール80%の例{.caption}
-::::
-::::col
-![Muted](https://placehold.co/600x400/00ff55/ffffff){.fit }
-図3: フィルター無しの画像{.caption}
 ::::
 :::
 
 ---
 
-## 背景画像 (Cover)
+## 🖼️ 画像の取り扱い {.center}
 
-`{.cover}` クラスで全画面表示になります。
-文字は上に重なります。
+画像をスライドにフィットさせたり、フィルターを適用したりできます。
 
-![Background](https://placehold.co/1920x1080/0055ff/ffffff){.cover}
+![Demo Image](https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80){.fit .opacity 80}
 
-<br>
-<br>
-<br>
-
-**背景の上に文字を書く**ことも可能です。
-{.center}
+`{.fit}` で枠内に収め、`{.opacity 80}` で透明度を調整しています。 {.caption}
 
 ---
 
-## スピーカーノート
+## 🎭 背景画像 (Cover) {.overlay-dim}
 
-このスライドにはスピーカーノートがあります。  
-(画面には表示されません)
+`{.cover}` クラスを使用すると、画像を背景として全画面表示します。 {.overlay-dim}
+
+![Cover Background](https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80){.cover}
+
+# 背景付きスライド {.center .overlay-dim}
+
+視覚的にインパクトのあるスライドも簡単に作成可能です。 {.center .overlay-dim}
+
+---
+
+## 📝 スピーカーノート
+
+`::: speaker` ブロックを使用すると、プレゼンターのみが見えるノートを作成できます。
+
+- 発表時のカンペ
+- 詳細な補足情報
+- 非表示の指示事項
 
 ::: speaker
-
-- プレゼンターにしか見えないメモ
-- カンペとして利用可能
-- `::: speaker` ブロックで記述
-
+この内容はスライド本体には表示されません。
+プレゼンターモード（開発中）で確認できるようになります。
 :::
-
 
 ---
 
-## テーブル要素
+## 📅 テーブル表示
 
-| ヘッダー1 | ヘッダー2 | ヘッダー3 |
-| --------- | --------- | --------- |
-| データ1   | データ2   | データ3   |
-| データ4   | データ5   | データ6   |
+データの比較やリストも標準のMarkdownテーブルで記述できます。
+
+| 機能 | Slide Bun | 他のツール |
+| :--- | :---: | :---: |
+| 設定の手間 | ゼロ | 必要 |
+| ビルド速度 | 爆速 | 普通 |
+| 自由度 | 高い | 制限あり |
+
+---
+
+## 🏁 まとめ
+
+Slide Bunを使えば、デザインに悩む時間を減らし、
+**「内容を伝えること」**に集中できます。
+
+### 次のステップ
+1. `slide-bun my-slides.md` でビルド
+2. `slide-bun serve my-slides.md` でプレビュー
+
+[Happy Presenting!]{.mark} {.center}

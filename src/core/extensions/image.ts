@@ -1,4 +1,5 @@
 import type { TokenizerAndRendererExtension, Tokens } from "marked";
+import { attrsToClass } from "./classUtils";
 
 export interface StyledImageToken extends Tokens.Generic {
   type: "styledImage";
@@ -29,8 +30,8 @@ export const styledImageExtension: TokenizerAndRendererExtension = {
   },
   renderer(token) {
     const styledToken = token as StyledImageToken;
-    // Normalize classes: remove leading '.' characters, collapse whitespace, and trim
-    const className = styledToken.attrs.replace(/\./g, "").split(/\s+/).filter(Boolean).join(" ");
+    // Use attrsToClass to handle numeric parameters (e.g. .opacity 60 -> opacity-60)
+    const className = attrsToClass(styledToken.attrs);
 
     // Place class attribute first to make tests that search for `<img class="...">` deterministic
     return `<img class="${className}" src="${styledToken.href}" alt="${styledToken.text}">`;

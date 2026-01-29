@@ -3,114 +3,120 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>機能網羅デモ</title>
-<style>:root{--theme-fg:#e0e0e0;--theme-bg:#1a1a1a;--theme-accent:#66a6ff;--theme-dim:#a0a0a0;--theme-backdrop:#000000;--theme-font-base:"Helvetica Neue",Helvetica,Arial,sans-serif;--theme-font-code:"Fira Code",monospace;--theme-slide-padding:4em;--theme-block-gap:0.2em;--theme-col-gap:0.5em;--theme-line-height:1.4;--theme-slide-width:1280px;--theme-slide-height:720px;--theme-font-size-h1:2.5em;--theme-font-size-h2:2em;--theme-font-size-h3:1.5em;--theme-font-size-body:1em;--theme-font-size-code:0.8em;}:root{--c-fg:var(--theme-fg,#1a1a1a);--c-bg:var(--theme-bg,#ffffff);--c-accent:var(--theme-accent,#0055ff);--c-dim:var(--theme-dim,#888888);--c-backdrop:var(--theme-backdrop,#000000);--font-base:var(--theme-font-base,"Helvetica Neue",Helvetica,Arial,sans-serif);--font-code:var(--theme-font-code,"Fira Code",monospace);--slide-padding:var(--theme-slide-padding,4em);--block-gap:var(--theme-block-gap,0.2em);--col-gap:var(--theme-col-gap,0.5em);--line-height:var(--theme-line-height,1.4);--slide-width:var(--theme-slide-width,1280px);--slide-height:var(--theme-slide-height,720px);--theme-font-scale-xs:0.85;--theme-font-scale-s:0.925;--theme-font-scale-m:1;--theme-font-scale-l:1.15;--theme-font-scale-xl:1.3;}body{margin:0;padding:0;font-family:var(--font-base);font-size:16px;color:var(--c-fg);background:var(--c-backdrop);overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh;}.slide:not(:first-child){opacity:0;pointer-events:none;}.js-active .slide{opacity:0;pointer-events:none;}.js-active .slide.active{opacity:1;pointer-events:auto;z-index:1;}.slide-viewport{width:var(--slide-width,1280px);height:var(--slide-height,720px);margin:0 auto;position:relative;}#slide-container{width:var(--slide-width,1280px);height:var(--slide-height,720px);position:relative;background:var(--c-bg);overflow:hidden;margin:0 auto;transform-origin:center center;transform:scale(1);}.slide{position:absolute;top:0;left:0;width:100%;height:100%;padding:var(--slide-padding);box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;min-height:0;opacity:1;pointer-events:auto;font-size:calc(var(--font-size-base,16px) * var(--text-scale,1));}.slide img,.slide video,.slide iframe{max-width:100%;max-height:100%;height:auto;object-fit:contain;display:block;margin:0 0;}.slide.has-background{padding:0;justify-content:center;}.slide.has-background > *{padding:var(--slide-padding);max-width:calc(100% - 2 * var(--slide-padding));}.columns{display:flex;gap:var(--col-gap);margin-top:var(--col-gap);flex:1;min-height:0;align-items:flex-start;width:100%;box-sizing:border-box;}.columns .col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:flex-start;box-sizing:border-box;}.columns .col img,.columns .col video,.columns .col iframe{max-width:100%;height:auto;display:block;}.columns .col pre{max-width:100%;overflow:auto;}:root{--font-size-h1:var(--theme-font-size-h1,2.5em);--font-size-h2:var(--theme-font-size-h2,2em);--font-size-h3:var(--theme-font-size-h3,1.5em);--font-size-body:var(--theme-font-size-body,1em);--font-size-code:var(--theme-font-size-code,0.8em);--font-scale-xs:var(--theme-font-scale-xs,0.85);--font-scale-s:var(--theme-font-scale-s,0.925);--font-scale-m:var(--theme-font-scale-m,1);--font-scale-l:var(--theme-font-scale-l,1.15);--font-scale-xl:var(--theme-font-scale-xl,1.3);}h1,.h1{font-size:var(--font-size-h1);font-weight:700;margin:0 0 0.5em 0;line-height:1.2;}h2,.h2{font-size:var(--font-size-h2);font-weight:600;margin:0 0 0.5em 0;line-height:1.2;}h3,.h3{font-size:var(--font-size-h3);font-weight:600;margin:0 0 0.5em 0;line-height:1.2;}p,ul,ol{font-size:var(--font-size-body);margin:0 0 0.5em 0;line-height:var(--line-height);}h2{margin-bottom:var(--block-gap);margin-top:0;}h3{margin-bottom:var(--block-gap);margin-top:0;}p,ul,ol{line-height:var(--line-height);margin-top:0;margin-bottom:var(--block-gap);}li{line-height:var(--line-height);margin-top:0;margin-bottom:var(--block-gap);}ul,ol{padding-left:1.5em;}code{font-family:var(--font-code);background:rgba(0,0,0,0.05);padding:0.2em 0.4em;border-radius:4px;}pre{background:#f4f4f4;padding:1em;border-radius:8px;overflow-x:auto;}pre code{background:none;padding:0;font-size:var(--font-size-code);}.font-size-xs{--font-size-h1:calc(var(--theme-font-size-h1) * var(--font-scale-xs));--font-size-h2:calc(var(--theme-font-size-h2) * var(--font-scale-xs));--font-size-h3:calc(var(--theme-font-size-h3) * var(--font-scale-xs));--font-size-body:calc(var(--theme-font-size-body) * var(--font-scale-xs));--font-size-code:calc(var(--theme-font-size-code) * var(--font-scale-xs));}.font-size-s{--font-size-h1:calc(var(--theme-font-size-h1) * var(--font-scale-s));--font-size-h2:calc(var(--theme-font-size-h2) * var(--font-scale-s));--font-size-h3:calc(var(--theme-font-size-h3) * var(--font-scale-s));--font-size-body:calc(var(--theme-font-size-body) * var(--font-scale-s));--font-size-code:calc(var(--theme-font-size-code) * var(--font-scale-s));}.font-size-m{--font-size-h1:calc(var(--theme-font-size-h1) * var(--font-scale-m));--font-size-h2:calc(var(--theme-font-size-h2) * var(--font-scale-m));--font-size-h3:calc(var(--theme-font-size-h3) * var(--font-scale-m));--font-size-body:calc(var(--theme-font-size-body) * var(--font-scale-m));--font-size-code:calc(var(--theme-font-size-code) * var(--font-scale-m));}.font-size-l{--font-size-h1:calc(var(--theme-font-size-h1) * var(--font-scale-l));--font-size-h2:calc(var(--theme-font-size-h2) * var(--font-scale-l));--font-size-h3:calc(var(--theme-font-size-h3) * var(--font-scale-l));--font-size-body:calc(var(--theme-font-size-body) * var(--font-scale-l));--font-size-code:calc(var(--theme-font-size-code) * var(--font-scale-l));}.font-size-xl{--font-size-h1:calc(var(--theme-font-size-h1) * var(--font-scale-xl));--font-size-h2:calc(var(--theme-font-size-h2) * var(--font-scale-xl));--font-size-h3:calc(var(--theme-font-size-h3) * var(--font-scale-xl));--font-size-body:calc(var(--theme-font-size-body) * var(--font-scale-xl));--font-size-code:calc(var(--theme-font-size-code) * var(--font-scale-xl));}table{width:100%;border-collapse:collapse;margin:1em 0;font-size:var(--font-size-body);}th,td{padding:var(--block-gap) var(--col-gap);text-align:left;border-bottom:1px solid var(--c-dim);}th{font-weight:600;border-bottom:2px solid var(--c-fg);}thead th{border-bottom:2px solid var(--c-fg);}tbody tr:last-child td{border-bottom:none;}.center{text-align:center;margin-left:auto;margin-right:auto;display:block;}.left{text-align:left;margin-right:auto;display:block;}.right{text-align:right;margin-left:auto;display:block;}.top{margin-top:0;margin-bottom:auto;}.bottom{margin-top:auto;margin-bottom:0;}.caption{font-size:0.8em;color:var(--c-dim);margin-top:0.5em;display:block;}.fit{max-width:100%;max-height:calc(720px * 0.8);object-fit:contain;display:block;margin:0 0;}.fit img{max-width:100%;max-height:100%;object-fit:contain;display:block;}.cover{position:absolute;top:0;left:0;width:100%;height:100%;z-index:-1;margin:0;padding:0;}.cover img{width:100%;object-fit:cover;display:block;max-height:100% !important;}.cover-content{position:absolute;top:var(--slide-padding);left:var(--slide-padding);right:var(--slide-padding);bottom:var(--slide-padding);z-index:-1;margin:0;padding:0;}.cover-content img{width:100%;height:100%;object-fit:cover;display:block;}.cover-safe{position:absolute;top:0;left:0;width:100%;height:100%;z-index:-1;opacity:0.8;margin:0;padding:0;}.cover-safe img{width:100%;height:100%;object-fit:cover;display:block;}.cover-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:-1;margin:0;padding:0;}.cover-overlay img{width:100%;height:100%;object-fit:cover;display:block;}.cover-overlay + *{position:relative;z-index:1;background:rgba(255,255,255,0.9);padding:2rem;border-radius:8px;margin:2rem;}.opacity-0{opacity:0;}.opacity-10{opacity:0.1;}.opacity-20{opacity:0.2;}.opacity-30{opacity:0.3;}.opacity-40{opacity:0.4;}.opacity-50{opacity:0.5;}.opacity-60{opacity:0.6;}.opacity-70{opacity:0.7;}.opacity-80{opacity:0.8;}.opacity-90{opacity:0.9;}.opacity-100{opacity:1;}.gray-0{filter:none;}.gray-10{filter:grayscale(10%);}.gray-20{filter:grayscale(20%);}.gray-30{filter:grayscale(30%);}.gray-40{filter:grayscale(40%);}.gray-50{filter:grayscale(50%);}.gray-60{filter:grayscale(60%);}.gray-70{filter:grayscale(70%);}.gray-80{filter:grayscale(80%);}.gray-90{filter:grayscale(90%);}.gray-100{filter:grayscale(100%);}.mark{background:linear-gradient(90deg,rgba(255,230,100,0.95),rgba(255,230,100,0.8));padding:0.08em 0.25em;border-radius:3px;color:inherit;display:inline;box-decoration-break:clone;-webkit-box-decoration-break:clone;}.muted{color:var(--c-dim);opacity:0.9;}.accent{color:var(--c-accent);}.small{font-size:0.8em;line-height:1.2;}.block-center{margin-left:auto;margin-right:auto;}.overlay-dim{background:rgba(0,0,0,0.35);color:#fff;}@media print{@page{size:landscape;margin:0;}body{background:none;height:auto;overflow:visible;display:block;}#slide-container{width:100%;height:auto;overflow:visible;background:none;}.slide{position:relative;top:auto;left:auto;width:100vw;height:100vh;opacity:1 !important;pointer-events:auto;page-break-after:always;break-after:page;border:none;box-shadow:none;}.slide.active{opacity:1;}}</style>
+<title>Slide Bun 機能紹介</title>
+<style>:root{--theme-fg:#1a1a1a;--theme-bg:#ffffff;--theme-accent:#0055ff;--theme-dim:#888888;--theme-backdrop:#000000;--theme-font-base:"Helvetica Neue",Helvetica,Arial,sans-serif;--theme-font-code:"Fira Code",monospace;--theme-slide-padding:4em;--theme-block-gap:0.2em;--theme-col-gap:0.5em;--theme-line-height:1.4;--theme-slide-width:1280px;--theme-slide-height:720px;--theme-font-size-h1:2.5em;--theme-font-size-h2:2em;--theme-font-size-h3:1.5em;--theme-font-size-body:1em;--theme-font-size-code:0.8em;}:root{--c-fg:var(--theme-fg,#1a1a1a);--c-bg:var(--theme-bg,#ffffff);--c-accent:var(--theme-accent,#0055ff);--c-dim:var(--theme-dim,#888888);--c-backdrop:var(--theme-backdrop,#000000);--font-base:var(--theme-font-base,"Helvetica Neue",Helvetica,Arial,sans-serif);--font-code:var(--theme-font-code,"Fira Code",monospace);--slide-padding:var(--theme-slide-padding,4em);--block-gap:var(--theme-block-gap,0.2em);--col-gap:var(--theme-col-gap,0.5em);--line-height:var(--theme-line-height,1.4);--slide-width:var(--theme-slide-width,1280px);--slide-height:var(--theme-slide-height,720px);--theme-font-scale-xs:0.85;--theme-font-scale-s:0.925;--theme-font-scale-m:1;--theme-font-scale-l:1.15;--theme-font-scale-xl:1.3;}body{margin:0;padding:0;font-family:var(--font-base);font-size:16px;color:var(--c-fg);background:var(--c-backdrop);overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh;}.slide:not(:first-child){opacity:0;pointer-events:none;}.js-active .slide{opacity:0;pointer-events:none;}.js-active .slide.active{opacity:1;pointer-events:auto;z-index:1;}.slide-viewport{width:var(--slide-width,1280px);height:var(--slide-height,720px);margin:0 auto;position:relative;}#slide-container{width:var(--slide-width,1280px);height:var(--slide-height,720px);position:relative;background:var(--c-bg);overflow:hidden;margin:0 auto;transform-origin:center center;transform:scale(1);}.slide{position:absolute;top:0;left:0;width:100%;height:100%;padding:var(--slide-padding);box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;min-height:0;opacity:1;pointer-events:auto;font-size:calc(var(--font-size-base,16px) * var(--text-scale,1));}.slide img,.slide video,.slide iframe{max-width:100%;max-height:100%;height:auto;object-fit:contain;display:block;margin:0 0;}.slide.has-background{padding:0;justify-content:center;}.slide.has-background > *{padding:var(--slide-padding);max-width:calc(100% - 2 * var(--slide-padding));}.columns{display:flex;gap:var(--col-gap);margin-top:var(--col-gap);flex:1;min-height:0;align-items:flex-start;width:100%;box-sizing:border-box;}.columns .col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:flex-start;box-sizing:border-box;}.columns .col img,.columns .col video,.columns .col iframe{max-width:100%;height:auto;display:block;}.columns .col pre{max-width:100%;overflow:auto;}:root{--font-size-h1:var(--theme-font-size-h1,2.5em);--font-size-h2:var(--theme-font-size-h2,2em);--font-size-h3:var(--theme-font-size-h3,1.5em);--font-size-body:var(--theme-font-size-body,1em);--font-size-code:var(--theme-font-size-code,0.8em);--font-scale-xs:var(--theme-font-scale-xs,0.85);--font-scale-s:var(--theme-font-scale-s,0.925);--font-scale-m:var(--theme-font-scale-m,1);--font-scale-l:var(--theme-font-scale-l,1.15);--font-scale-xl:var(--theme-font-scale-xl,1.3);}h1,.h1{font-size:var(--font-size-h1);font-weight:700;margin:0 0 0.5em 0;line-height:1.2;}h2,.h2{font-size:var(--font-size-h2);font-weight:600;margin:0 0 0.5em 0;line-height:1.2;}h3,.h3{font-size:var(--font-size-h3);font-weight:600;margin:0 0 0.5em 0;line-height:1.2;}p,ul,ol{font-size:var(--font-size-body);margin:0 0 0.5em 0;line-height:var(--line-height);}h2{margin-bottom:var(--block-gap);margin-top:0;}h3{margin-bottom:var(--block-gap);margin-top:0;}p,ul,ol{line-height:var(--line-height);margin-top:0;margin-bottom:var(--block-gap);}li{line-height:var(--line-height);margin-top:0;margin-bottom:var(--block-gap);}ul,ol{padding-left:1.5em;}code{font-family:var(--font-code);background:rgba(0,0,0,0.05);padding:0.2em 0.4em;border-radius:4px;}pre{background:#f4f4f4;padding:1em;border-radius:8px;overflow-x:auto;}pre code{background:none;padding:0;font-size:var(--font-size-code);}.font-size-xs{--font-size-h1:calc(var(--theme-font-size-h1) * var(--font-scale-xs));--font-size-h2:calc(var(--theme-font-size-h2) * var(--font-scale-xs));--font-size-h3:calc(var(--theme-font-size-h3) * var(--font-scale-xs));--font-size-body:calc(var(--theme-font-size-body) * var(--font-scale-xs));--font-size-code:calc(var(--theme-font-size-code) * var(--font-scale-xs));}.font-size-s{--font-size-h1:calc(var(--theme-font-size-h1) * var(--font-scale-s));--font-size-h2:calc(var(--theme-font-size-h2) * var(--font-scale-s));--font-size-h3:calc(var(--theme-font-size-h3) * var(--font-scale-s));--font-size-body:calc(var(--theme-font-size-body) * var(--font-scale-s));--font-size-code:calc(var(--theme-font-size-code) * var(--font-scale-s));}.font-size-m{--font-size-h1:calc(var(--theme-font-size-h1) * var(--font-scale-m));--font-size-h2:calc(var(--theme-font-size-h2) * var(--font-scale-m));--font-size-h3:calc(var(--theme-font-size-h3) * var(--font-scale-m));--font-size-body:calc(var(--theme-font-size-body) * var(--font-scale-m));--font-size-code:calc(var(--theme-font-size-code) * var(--font-scale-m));}.font-size-l{--font-size-h1:calc(var(--theme-font-size-h1) * var(--font-scale-l));--font-size-h2:calc(var(--theme-font-size-h2) * var(--font-scale-l));--font-size-h3:calc(var(--theme-font-size-h3) * var(--font-scale-l));--font-size-body:calc(var(--theme-font-size-body) * var(--font-scale-l));--font-size-code:calc(var(--theme-font-size-code) * var(--font-scale-l));}.font-size-xl{--font-size-h1:calc(var(--theme-font-size-h1) * var(--font-scale-xl));--font-size-h2:calc(var(--theme-font-size-h2) * var(--font-scale-xl));--font-size-h3:calc(var(--theme-font-size-h3) * var(--font-scale-xl));--font-size-body:calc(var(--theme-font-size-body) * var(--font-scale-xl));--font-size-code:calc(var(--theme-font-size-code) * var(--font-scale-xl));}table{width:100%;border-collapse:collapse;margin:1em 0;font-size:var(--font-size-body);}th,td{padding:var(--block-gap) var(--col-gap);text-align:left;border-bottom:1px solid var(--c-dim);}th{font-weight:600;border-bottom:2px solid var(--c-fg);}thead th{border-bottom:2px solid var(--c-fg);}tbody tr:last-child td{border-bottom:none;}.center{text-align:center;margin-left:auto;margin-right:auto;display:block;}.left{text-align:left;margin-right:auto;display:block;}.right{text-align:right;margin-left:auto;display:block;}.top{margin-top:0;margin-bottom:auto;}.bottom{margin-top:auto;margin-bottom:0;}.caption{font-size:0.8em;color:var(--c-dim);margin-top:0.5em;display:block;}img .fit{max-width:100%;object-fit:contain;display:block;margin:0 0;}img.cover{position:absolute;object-fit:cover;top:0;left:0;width:100%;height:100%;z-index:-1;margin:0;padding:0;}.opacity-0{opacity:0;}.opacity-10{opacity:0.1;}.opacity-20{opacity:0.2;}.opacity-30{opacity:0.3;}.opacity-40{opacity:0.4;}.opacity-50{opacity:0.5;}.opacity-60{opacity:0.6;}.opacity-70{opacity:0.7;}.opacity-80{opacity:0.8;}.opacity-90{opacity:0.9;}.opacity-100{opacity:1;}.gray-0{filter:none;}.gray-10{filter:grayscale(10%);}.gray-20{filter:grayscale(20%);}.gray-30{filter:grayscale(30%);}.gray-40{filter:grayscale(40%);}.gray-50{filter:grayscale(50%);}.gray-60{filter:grayscale(60%);}.gray-70{filter:grayscale(70%);}.gray-80{filter:grayscale(80%);}.gray-90{filter:grayscale(90%);}.gray-100{filter:grayscale(100%);}.mark{background:linear-gradient(90deg,rgba(255,230,100,0.95),rgba(255,230,100,0.8));padding:0.08em 0.25em;border-radius:3px;color:inherit;display:inline;box-decoration-break:clone;-webkit-box-decoration-break:clone;}.muted{color:var(--c-dim);opacity:0.9;}.accent{color:var(--c-accent);}.small{font-size:0.8em;line-height:1.2;}.block-center{margin-left:auto;margin-right:auto;}.overlay-dim{background:rgba(0,0,0,0.35);color:#fff;}@media print{@page{size:landscape;margin:0;}body{background:none;height:auto;overflow:visible;display:block;}#slide-container{width:100%;height:auto;overflow:visible;background:none;}.slide{position:relative;top:auto;left:auto;width:100vw;height:100vh;opacity:1 !important;pointer-events:auto;page-break-after:always;break-after:page;border:none;box-shadow:none;}.slide.active{opacity:1;}}</style>
 </head>
-<body>
+<body class="font-size-m">
 <div class="slide-viewport">
 <div id="slide-container">
 <section class="slide active" id="slide-1" data-id="1" style="font-size: 32px">
-<h1 class="center">Slide Bun Features</h1>
-<p>全ての機能を詰め込んだデモ・スライドです。</p>
-<p class="caption right">Created by Slide Bun</p>
-<div class="speaker-notes" hidden><p>ここからデモ開始。
-まずはタイトルのインパクトを強調。</p>
+<h1 class="center">Slide Bun</h1>
+<p><strong>Zero-Config Slide Generator</strong>
+Markdownを書くだけで、美しいスライドを自動生成します。</p>
+<p class="center"><span class="mark">今すぐ始める</span></p>
+<div class="speaker-notes" hidden><p>スライドの冒頭です。
+Slide Bunは設定不要で使い始められるスライド作成ツールです。</p>
 </div>
 </section>
 <section class="slide" id="slide-2" data-id="2" style="font-size: 24px">
-<h2>基本的なタイポグラフィ</h2>
-<p>Markdownの標準記法がそのまま使えます。</p>
+<h2>🚀 主な特徴</h2>
 <ul>
-<li><strong>強調（Bold）</strong> や <em>斜体（Italic）</em></li>
-<li><code>インラインコード</code></li>
-<li>リンク: <a href="https://github.com">GitHub</a></li>
+<li><strong>Markdownベース</strong>: 慣れ親しんだ記法でコンテンツを作成</li>
+<li><strong>自動レイアウト</strong>: コンテンツ量に合わせてフォントサイズを自動調整</li>
+<li><strong>柔軟な拡張</strong>: クラス指定やカラムレイアウトをサポート</li>
+<li><strong>高速ビルド</strong>: Bunパワーによる高速なHTML生成</li>
 </ul>
-<ol>
-<li>番号付きリスト</li>
-<li>もサポート</li>
-</ol>
-<div class="speaker-notes" hidden><p>基本機能の紹介。</p>
-</div>
 </section>
 <section class="slide" id="slide-3" data-id="3" style="font-size: 24px">
-<h2 class="center">2カラムレイアウト</h2>
-<p><code> ::: columns</code> で左右に分割できます。</p>
-<div class="columns"><div class="col"><h3>左側</h3>
-<ul>
-<li>リスト</li>
-<li>テキスト</li>
-<li>画像など</li>
-</ul>
-</div><div class="col"><h3>右側</h3>
-<p>コードブロックも置けます。</p>
-<pre><code class="language-typescript">const hello = &quot;world&quot;;
-console.log(hello);
-</code></pre>
-</div></div><p class="bottom">この行はカラムレイアウトの影響を受けません。</p>
-</section>
-<section class="slide" id="slide-4" data-id="4" style="font-size: 32px">
-<h2 class="center">画像の最適化 (Fit)</h2>
-<p><code>{.fit}</code> クラスでスライド内に収めます。</p>
-<p class="fit"><img src="https://placehold.co/600x400" alt="Placeholder"></p>
-<p class="caption">図1: プレースホルダー画像</p>
-</section>
-<section class="slide" id="slide-5" data-id="5" style="font-size: 24px">
-<h3>テキストユーティリティの例（ハイライト・枠）</h3>
-<p>テキストの意図（注目・枠付け）を示すためのユーティリティも使えます。<br>インラインで強調したい語句には <code>[...]</code> とクラスを併用します（例: <code>[重要]{.mark}</code>）。</p>
-<p>この段落では <span class="mark">重要</span> な語句をハイライトして表示します。</p>
-</section>
-<section class="slide" id="slide-6" data-id="6" style="font-size: 24px">
-<h3>画像ユーティリティの例（数値指定）</h3>
-<p>意図的に画像の見た目を調整するために、数値付きユーティリティを使えます。</p>
-<p>書式は <code>{.opacity 60}</code> のようにクラス名と数値を空白で並べます。
-数値はパーセンテージとして解釈されます。</p>
-<div class="columns"><div class="col"><p class="fit opacity-60 gray-80"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted"></p>
-<p class="caption">図2: 不透明度60%かつグレースケール80%の例</p>
-</div><div class="col"><p class="fit"><img src="https://placehold.co/600x400/00ff55/ffffff" alt="Muted"></p>
-<p class="caption">図3: フィルター無しの画像</p>
-</div></div>
-</section>
-<section class="slide" id="slide-7" data-id="7" style="font-size: 32px">
-<h2>背景画像 (Cover)</h2>
-<p><code>{.cover}</code> クラスで全画面表示になります。
-文字は上に重なります。</p>
-<p class="cover"><img src="https://placehold.co/1920x1080/0055ff/ffffff" alt="Background"></p>
-<br>
-<br>
-<br>
-<p class="center"><strong>背景の上に文字を書く</strong>ことも可能です。</p>
-</section>
-<section class="slide" id="slide-8" data-id="8" style="font-size: 32px">
-<h2>スピーカーノート</h2>
-<p>このスライドにはスピーカーノートがあります。<br>(画面には表示されません)</p>
-<div class="speaker-notes" hidden><ul>
-<li>プレゼンターにしか見えないメモ</li>
-<li>カンペとして利用可能</li>
-<li><code>::: speaker</code> ブロックで記述</li>
-</ul>
+<h2>🎨 タイポグラフィとスタイル</h2>
+<p>標準的なMarkdownに加え、属性指定が可能です。</p>
+<h3>インラインスタイル</h3>
+<p>特定の単語を <span class="mark">ハイライト</span> したり、<span class="accent">アクセント</span> をつけたりできます。</p>
+<h3>段落スタイル</h3>
+<p class="center">この段落は中央寄せです。</p>
+<p class="caption right">この段落は右寄せのキャプションです。</p>
+<div class="speaker-notes" hidden><p>属性指定は <code>{.class}</code> の形式で行います。</p>
 </div>
 </section>
-<section class="slide" id="slide-9" data-id="9" style="font-size: 32px">
-<h2>テーブル要素</h2>
+<section class="slide" id="slide-4" data-id="4" style="font-size: 24px">
+<h2 class="center">📊 2カラムレイアウト</h2>
+<p><code> ::: columns</code> コンテナを使用して、画面を分割できます。</p>
+<div class="columns"><div class="col"><h3>左カラム</h3>
+<ul>
+<li>箇条書き</li>
+<li>コンテンツの整理</li>
+<li>視覚的な分離</li>
+</ul>
+</div><div class="col"><h3>右カラム</h3>
+<pre><code class="language-typescript">// コードもきれいに表示
+const slide = new SlideBun();
+slide.build(&quot;presentation.md&quot;);
+</code></pre>
+</div></div>
+</section>
+<section class="slide" id="slide-5" data-id="5" style="font-size: 32px">
+<h2 class="center">🖼️ 画像の取り扱い</h2>
+<p>画像をスライドにフィットさせたり、フィルターを適用したりできます。</p>
+<img class="fit opacity-80" src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80" alt="Demo Image">
+<p class="caption"><code>{.fit}</code> で枠内に収め、<code>{.opacity 80}</code> で透明度を調整しています。</p>
+</section>
+<section class="slide" id="slide-6" data-id="6" style="font-size: 32px">
+<h2 class="overlay-dim">🎭 背景画像 (Cover)</h2>
+<p class="overlay-dim"><code>{.cover}</code> クラスを使用すると、画像を背景として全画面表示します。</p>
+<img class="cover" src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80" alt="Cover Background">
+<h1 class="center overlay-dim">背景付きスライド</h1>
+<p class="center overlay-dim">視覚的にインパクトのあるスライドも簡単に作成可能です。</p>
+</section>
+<section class="slide" id="slide-7" data-id="7" style="font-size: 32px">
+<h2>📝 スピーカーノート</h2>
+<p><code> ::: speaker</code> ブロックを使用すると、プレゼンターのみが見えるノートを作成できます。</p>
+<ul>
+<li>発表時のカンペ</li>
+<li>詳細な補足情報</li>
+<li>非表示の指示事項</li>
+</ul>
+<div class="speaker-notes" hidden><p>この内容はスライド本体には表示されません。
+プレゼンターモード（開発中）で確認できるようになります。</p>
+</div>
+</section>
+<section class="slide" id="slide-8" data-id="8" style="font-size: 32px">
+<h2>📅 テーブル表示</h2>
+<p>データの比較やリストも標準のMarkdownテーブルで記述できます。</p>
 <table>
 <thead>
 <tr>
-<th>ヘッダー1</th>
-<th>ヘッダー2</th>
-<th>ヘッダー3</th>
+<th align="left">機能</th>
+<th align="center">Slide Bun</th>
+<th align="center">他のツール</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>データ1</td>
-<td>データ2</td>
-<td>データ3</td>
+<td align="left">設定の手間</td>
+<td align="center">ゼロ</td>
+<td align="center">必要</td>
 </tr>
 <tr>
-<td>データ4</td>
-<td>データ5</td>
-<td>データ6</td>
+<td align="left">ビルド速度</td>
+<td align="center">爆速</td>
+<td align="center">普通</td>
+</tr>
+<tr>
+<td align="left">自由度</td>
+<td align="center">高い</td>
+<td align="center">制限あり</td>
 </tr>
 </tbody></table>
+</section>
+<section class="slide" id="slide-9" data-id="9" style="font-size: 24px">
+<h2>🏁 まとめ</h2>
+<p>Slide Bunを使えば、デザインに悩む時間を減らし、
+**「内容を伝えること」**に集中できます。</p>
+<h3>次のステップ</h3>
+<ol>
+<li><code>slide-bun my-slides.md</code> でビルド</li>
+<li><code>slide-bun serve my-slides.md</code> でプレビュー</li>
+</ol>
+<p class="center"><span class="mark">Happy Presenting!</span></p>
 </section>
 </div>
 </div>

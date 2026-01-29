@@ -370,23 +370,16 @@ tbody tr:last-child td {
   display: block;
 }
 
-.fit {
+img .fit {
   max-width: 100%;
-  max-height: calc(720px * 0.8);
   object-fit: contain;
   display: block;
   margin: 0 0;
 }
 
-.fit img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-.cover {
+img.cover {
   position: absolute;
+  object-fit: cover;
   top: 0;
   left: 0;
   width: 100%;
@@ -394,77 +387,6 @@ tbody tr:last-child td {
   z-index: -1;
   margin: 0;
   padding: 0;
-}
-
-.cover img {
-  width: 100%;
-  object-fit: cover;
-  display: block;
-  max-height: 100% !important;
-}
-
-.cover-content {
-  position: absolute;
-  top: var(--slide-padding);
-  left: var(--slide-padding);
-  right: var(--slide-padding);
-  bottom: var(--slide-padding);
-  z-index: -1;
-  margin: 0;
-  padding: 0;
-}
-
-.cover-content img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.cover-safe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  opacity: 0.8;
-  margin: 0;
-  padding: 0;
-}
-
-.cover-safe img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.cover-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  margin: 0;
-  padding: 0;
-}
-
-.cover-overlay img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.cover-overlay + * {
-  position: relative;
-  z-index: 1;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 2rem;
-  border-radius: 8px;
-  margin: 2rem;
 }
 
 .opacity-0 {
