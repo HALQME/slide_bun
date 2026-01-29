@@ -1,5 +1,4 @@
 import { Marked } from "marked";
-import matter from "gray-matter";
 import {
   styledHeadingExtension,
   styledSpanExtension,
@@ -26,9 +25,38 @@ export class MarkdownParser {
     });
   }
 
+  /**
+   * Extract frontmatter data and content from raw markdown.
+   * Uses Bun.YAML for parsing.
+   */
+  private extractFrontmatter(raw: string): { data: Record<string, any>; content: string } {
+    const trimmed = raw.trim();
+    if (!trimmed.startsWith("---")) {
+      return { data: {}, content: raw };
+    }
+
+    // Split by the second occurrence of ---
+    // Rule: starts with ---, then non-greedy content, then --- on its own line
+    const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+
+    if (match) {
+      try {
+        const yamlPart = match[1]!;
+        const contentPart = match[2]!;
+        const data = (Bun.YAML.parse(yamlPart) as Record<string, any>) || {};
+        return { data, content: contentPart };
+      } catch (e) {
+        console.warn("Failed to parse YAML frontmatter:", e);
+        return { data: {}, content: raw };
+      }
+    }
+
+    return { data: {}, content: raw };
+  }
+
   parse(rawMarkdown: string): Presentation {
     // 1. Parse Frontmatter
-    const { content, data } = matter(rawMarkdown);
+    const { content, data } = this.extractFrontmatter(rawMarkdown);
 
     // 2. Tokenize with Marked
     const tokens = this.markedInstance.lexer(content);
