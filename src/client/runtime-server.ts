@@ -161,13 +161,40 @@ function setupClientMode(channel: BroadcastChannel | null) {
         lastPointerY = message.payload.y;
 
         // Update target position based on normalized coordinates
-        const slideElement = document.querySelector(".slide");
-        if (slideElement) {
-          const rect = slideElement.getBoundingClientRect();
+        const slideContainer = document.getElementById("slide-container");
+        if (slideContainer) {
+          const containerRect = slideContainer.getBoundingClientRect();
+
+          // Default slide dimensions (must match the scale calculation at top of file)
+          const slideWidth = 1280;
+          const slideHeight = 720;
+          const slideAspectRatio = slideWidth / slideHeight;
+
+          // Calculate the actual slide display area (letterboxed if needed)
+          const containerAspectRatio = containerRect.width / containerRect.height;
+
+          let actualSlideWidth: number;
+          let actualSlideHeight: number;
+          let slideOffsetX: number;
+          let slideOffsetY: number;
+
+          if (containerAspectRatio > slideAspectRatio) {
+            // Container is wider - slide is constrained by height
+            actualSlideHeight = containerRect.height;
+            actualSlideWidth = actualSlideHeight * slideAspectRatio;
+            slideOffsetX = (containerRect.width - actualSlideWidth) / 2;
+            slideOffsetY = 0;
+          } else {
+            // Container is taller - slide is constrained by width
+            actualSlideWidth = containerRect.width;
+            actualSlideHeight = actualSlideWidth / slideAspectRatio;
+            slideOffsetX = 0;
+            slideOffsetY = (containerRect.height - actualSlideHeight) / 2;
+          }
 
           // Convert normalized coordinates to screen coordinates
-          targetX = rect.left + message.payload.x * rect.width;
-          targetY = rect.top + message.payload.y * rect.height;
+          targetX = containerRect.left + slideOffsetX + message.payload.x * actualSlideWidth;
+          targetY = containerRect.top + slideOffsetY + message.payload.y * actualSlideHeight;
           isActive = message.payload.active;
         }
       }
@@ -186,11 +213,40 @@ function setupClientMode(channel: BroadcastChannel | null) {
 
   // Update laser pointer position when viewport changes (due to resize, etc.)
   function updateLaserPointerPosition() {
-    const slideElement = document.querySelector(".slide");
-    if (slideElement && isActive) {
-      const rect = slideElement.getBoundingClientRect();
-      targetX = rect.left + lastPointerX * rect.width;
-      targetY = rect.top + lastPointerY * rect.height;
+    const slideContainer = document.getElementById("slide-container");
+    if (slideContainer && isActive) {
+      const containerRect = slideContainer.getBoundingClientRect();
+
+      // Default slide dimensions (must match the scale calculation at top of file)
+      const slideWidth = 1280;
+      const slideHeight = 720;
+      const slideAspectRatio = slideWidth / slideHeight;
+
+      // Calculate the actual slide display area (letterboxed if needed)
+      const containerAspectRatio = containerRect.width / containerRect.height;
+
+      let actualSlideWidth: number;
+      let actualSlideHeight: number;
+      let slideOffsetX: number;
+      let slideOffsetY: number;
+
+      if (containerAspectRatio > slideAspectRatio) {
+        // Container is wider - slide is constrained by height
+        actualSlideHeight = containerRect.height;
+        actualSlideWidth = actualSlideHeight * slideAspectRatio;
+        slideOffsetX = (containerRect.width - actualSlideWidth) / 2;
+        slideOffsetY = 0;
+      } else {
+        // Container is taller - slide is constrained by width
+        actualSlideWidth = containerRect.width;
+        actualSlideHeight = actualSlideWidth / slideAspectRatio;
+        slideOffsetX = 0;
+        slideOffsetY = (containerRect.height - actualSlideHeight) / 2;
+      }
+
+      // Recalculate position using stored normalized coordinates
+      targetX = containerRect.left + slideOffsetX + lastPointerX * actualSlideWidth;
+      targetY = containerRect.top + slideOffsetY + lastPointerY * actualSlideHeight;
     }
   }
 
@@ -318,22 +374,53 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
     channel.postMessage({ type: "pointer", payload } as SyncMessage);
   };
 
-  // Normalize coordinates to 0-1 range based on the presenter-current container
+  // Normalize coordinates to 0-1 range based on the actual slide display area
   const normalizeCoordinates = (clientX: number, clientY: number) => {
-    // In presenter mode, we use the #presenter-current container as the reference
-    // This container holds the iframe and has the laser pointer overlay
+    // In presenter mode, we need to calculate the actual slide display area
+    // The slide is scaled to fit within #presenter-current while maintaining aspect ratio
     const currentView = document.getElementById("presenter-current");
 
     if (!currentView) return { x: 0, y: 0, valid: false };
 
-    const rect = currentView.getBoundingClientRect();
+    const containerRect = currentView.getBoundingClientRect();
 
-    // Calculate relative position within the slide container
-    const x = (clientX - rect.left) / rect.width;
-    const y = (clientY - rect.top) / rect.height;
+    // Default slide dimensions (from runtime-server.ts viewport scale calculation)
+    const slideWidth = 1280;
+    const slideHeight = 720;
+    const slideAspectRatio = slideWidth / slideHeight;
 
-    // Check if coordinates are within slide bounds (with small margin for usability)
-    const valid = x >= -0.05 && x <= 1.05 && y >= -0.05 && y <= 1.05;
+    // Calculate the actual slide display area (letterboxed if needed)
+    const containerAspectRatio = containerRect.width / containerRect.height;
+
+    let actualSlideWidth: number;
+    let actualSlideHeight: number;
+    let slideOffsetX: number;
+    let slideOffsetY: number;
+
+    if (containerAspectRatio > slideAspectRatio) {
+      // Container is wider - slide is constrained by height
+      actualSlideHeight = containerRect.height;
+      actualSlideWidth = actualSlideHeight * slideAspectRatio;
+      slideOffsetX = (containerRect.width - actualSlideWidth) / 2;
+      slideOffsetY = 0;
+    } else {
+      // Container is taller - slide is constrained by width
+      actualSlideWidth = containerRect.width;
+      actualSlideHeight = actualSlideWidth / slideAspectRatio;
+      slideOffsetX = 0;
+      slideOffsetY = (containerRect.height - actualSlideHeight) / 2;
+    }
+
+    // Calculate position relative to the actual slide display area
+    const relativeX = clientX - containerRect.left - slideOffsetX;
+    const relativeY = clientY - containerRect.top - slideOffsetY;
+
+    // Normalize to 0-1 range
+    const x = relativeX / actualSlideWidth;
+    const y = relativeY / actualSlideHeight;
+
+    // Check if coordinates are within the actual slide bounds
+    const valid = x >= 0 && x <= 1 && y >= 0 && y <= 1;
 
     // Clamp values to 0-1 range
     const clampedX = Math.max(0, Math.min(1, x));
