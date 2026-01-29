@@ -70,9 +70,7 @@ export class HTMLRenderer {
               (t.type === "text" && t.raw.trim() === ""),
           );
 
-          const hasImage = tokens.some(
-            (t) => t.type === "image" || t.type === "styledImage",
-          );
+          const hasImage = tokens.some((t) => t.type === "image" || t.type === "styledImage");
 
           if (hasImage && isOnlyImages) {
             return this.parser.parseInline(tokens) + "\n";

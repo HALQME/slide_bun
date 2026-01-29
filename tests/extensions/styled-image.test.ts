@@ -25,7 +25,7 @@ describe("styledImageExtension", () => {
   it("should handle numeric parameters correctly", () => {
     const html = marked.parse("![alt](src.jpg){.opacity 60}");
     expect(html).toContain('<img class="opacity-60"');
-    
+
     const html2 = marked.parse("![alt](src.jpg){.fit .gray 80}");
     expect(html2).toContain('<img class="fit gray-80"');
   });

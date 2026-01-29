@@ -30,20 +30,20 @@ describe("Integration: Markdown to HTML Generation", () => {
       minify: false,
       outputPath: OUTPUT_FILE,
       autoOpen: false,
-      help: false
+      help: false,
     });
 
     expect(existsSync(OUTPUT_FILE)).toBe(true);
-    
+
     const html = await Bun.file(OUTPUT_FILE).text();
 
     // 1. Basic Structure Check
     expect(html).toContain("<!DOCTYPE html>");
     expect(html).toContain("<title>Integration Test Slide</title>");
     expect(html).toContain('<div class="slide-viewport">');
-    
+
     // 2. Metadata & Configuration
-    // Font size preset M maps to font-size-m class on body or container? 
+    // Font size preset M maps to font-size-m class on body or container?
     // Checking implementation: bodyClass = config.fontSize ? ` class="${config.fontSize}"` : "";
     // Config extraction adds 'font-size-' prefix. So 'M' -> 'font-size-m'.
     expect(html).toContain('class="font-size-m"');
@@ -53,19 +53,19 @@ describe("Integration: Markdown to HTML Generation", () => {
     // Slide 1
     expect(html).toContain('<section class="slide active" id="slide-1"');
     expect(html).toContain("<h1>Slide 1</h1>");
-    
+
     // Slide 2
     expect(html).toContain('<section class="slide" id="slide-2"');
     expect(html).toContain("<ul>");
     expect(html).toContain("<li>List item 1</li>");
-    
+
     // Slide 3
     expect(html).toContain('<section class="slide" id="slide-3"');
-    
+
     // 4. Extensions (Class utils, etc)
     // Image with class (styledImageExtension puts class first)
     expect(html).toContain('<img class="shadow-lg" src="image.png" alt="Test Image">');
-    
+
     // 5. Speaker Notes
     // Note for slide 2
     expect(html).toContain('<div class="speaker-notes" hidden>');
@@ -74,15 +74,15 @@ describe("Integration: Markdown to HTML Generation", () => {
     // 6. Assets Embedding (Inline by default)
     expect(html).toContain("<style>");
     // Basic CSS check (from base.css or theme)
-    expect(html).toContain(":root"); 
+    expect(html).toContain(":root");
     expect(html).toContain("body");
-    
+
     // Runtime Script Embedding
     expect(html).toContain("<script>");
     // Check for some runtime code logic (minified or not)
     // We expect some runtime logic to be present.
     expect(html).toContain("window.location.hash"); // Common slide navigation logic
-    
+
     // 7. Snapshot Testing
     // We create a snapshot of the HTML structure (stripping dynamic parts if any)
     // For now, simple snapshot of the whole content is fine as it should be deterministic

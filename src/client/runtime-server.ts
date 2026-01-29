@@ -1,5 +1,6 @@
 import { SlideNavigator } from "./core/navigator";
 import { PresenterUI } from "./presenter/ui";
+import type { SyncMessage } from "../types";
 
 document.addEventListener("DOMContentLoaded", () => {
   // Calculate and apply viewport scale immediately to prevent resize flicker
@@ -83,23 +84,123 @@ function setupClientMode(channel: BroadcastChannel | null) {
     },
   });
 
+  // Laser pointer state and rendering
+  let targetX = 0;
+  let targetY = 0;
+  let currentX = 0;
+  let currentY = 0;
+  let isActive = false;
+  let animationFrameId: number | null = null;
+  const interpolationFactor = 0.2; // Smoothing factor
+  const maxPacketAge = 500; // Max age of packets in ms
+
+  // Create laser pointer element
+  const laserPointer = document.createElement("div");
+  laserPointer.id = "laser-pointer";
+  laserPointer.style.position = "fixed";
+  laserPointer.style.width = "12px";
+  laserPointer.style.height = "12px";
+  laserPointer.style.borderRadius = "50%";
+  laserPointer.style.backgroundColor = "#ff0000";
+  laserPointer.style.boxShadow = "0 0 8px #ff0000, 0 0 16px #ff0000";
+  laserPointer.style.pointerEvents = "none";
+  laserPointer.style.zIndex = "9999";
+  laserPointer.style.transform = "translate(-50%, -50%)";
+  laserPointer.style.transition = "opacity 0.2s";
+  laserPointer.style.opacity = "0"; // Initially hidden
+  laserPointer.style.userSelect = "none";
+  document.body.appendChild(laserPointer);
+
   function updateHash(index: number) {
     window.location.hash = `#${index + 1}`;
   }
 
+  // Interpolation function
+  const interpolate = (start: number, end: number, factor: number): number => {
+    return start + (end - start) * factor;
+  };
+
+  // Main animation loop for smooth pointer movement
+  const animatePointer = () => {
+    // Update position using interpolation
+    currentX = interpolate(currentX, targetX, interpolationFactor);
+    currentY = interpolate(currentY, targetY, interpolationFactor);
+
+    // Update the laser pointer position
+    laserPointer.style.left = `${currentX}px`;
+    laserPointer.style.top = `${currentY}px`;
+
+    // Show/hide based on active state
+    laserPointer.style.opacity = isActive ? "1" : "0";
+
+    // Continue the animation loop
+    animationFrameId = requestAnimationFrame(animatePointer);
+  };
+
   // Listen for sync events
   if (channel) {
     channel.onmessage = (event) => {
-      if (event.data && event.data.type === "navigate") {
-        const index = event.data.index;
+      const message = event.data as SyncMessage;
+
+      if (message.type === "navigate") {
+        const index = message.index;
         if (typeof index === "number" && index !== navigator.currentIndex) {
           // Go to slide but suppress callback to avoid loop
           navigator.goTo(index, true);
           updateHash(index);
         }
+      } else if (message.type === "pointer") {
+        // Check if packet is too old
+        const now = Date.now();
+        if (now - message.payload.timestamp > maxPacketAge) {
+          return; // Ignore stale packet
+        }
+
+        // Store the coordinates for potential resize updates
+        lastPointerX = message.payload.x;
+        lastPointerY = message.payload.y;
+
+        // Update target position based on normalized coordinates
+        const slideElement = document.querySelector(".slide");
+        if (slideElement) {
+          const rect = slideElement.getBoundingClientRect();
+
+          // Convert normalized coordinates to screen coordinates
+          targetX = rect.left + message.payload.x * rect.width;
+          targetY = rect.top + message.payload.y * rect.height;
+          isActive = message.payload.active;
+        }
       }
     };
+
+    // Add debug logging for outgoing messages
+    const originalPostMessage = channel.postMessage;
+    channel.postMessage = function (message) {
+      originalPostMessage.call(this, message);
+    };
   }
+
+  // Store the last received coordinates to use when recalculating after resize
+  let lastPointerX = 0;
+  let lastPointerY = 0;
+
+  // Update laser pointer position when viewport changes (due to resize, etc.)
+  function updateLaserPointerPosition() {
+    const slideElement = document.querySelector(".slide");
+    if (slideElement && isActive) {
+      const rect = slideElement.getBoundingClientRect();
+      targetX = rect.left + lastPointerX * rect.width;
+      targetY = rect.top + lastPointerY * rect.height;
+    }
+  }
+
+  // Add resize listener to adjust laser pointer position
+  window.addEventListener("resize", () => {
+    updateLaserPointerPosition();
+  });
+
+  // Start the animation loop
+  animationFrameId = requestAnimationFrame(animatePointer);
 
   // Handle hash changes
   function handleHash() {
@@ -155,6 +256,13 @@ function setupClientMode(channel: BroadcastChannel | null) {
   // Indicate JS is active after initial setup
   document.body.classList.add("js-active");
 
+  // Clean up animation frame on page unload
+  window.addEventListener("beforeunload", () => {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+    }
+  });
+
   window.addEventListener("hashchange", handleHash);
 }
 
@@ -177,14 +285,137 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
   const ui = new PresenterUI();
   ui.mount();
 
+  // Store reference to UI globally so it can be accessed by event handlers
+  (window as any).__presenterUI = ui;
+
   // 3. State
   let currentIndex = 0;
+
+  // Pointer state
+  let isPointerActive = false; // Whether the mouse is currently over the slide
+  let isLaserPointerOn = false; // Whether the laser pointer is turned on
+  let lastPointerSendTime = 0;
+  const pointerSendInterval = 33; // ~30fps (33ms interval)
 
   // 4. Methods
   const update = (index: number) => {
     currentIndex = index;
     ui.updateViews(index, totalSlides);
     ui.updateNotes(notesMap[index] || "");
+  };
+
+  // Send pointer position to clients
+  const sendPointerUpdate = (x: number, y: number, active: boolean) => {
+    if (!channel) return;
+
+    const payload = {
+      x,
+      y,
+      active,
+      timestamp: Date.now(),
+    };
+
+    channel.postMessage({ type: "pointer", payload } as SyncMessage);
+  };
+
+  // Normalize coordinates to 0-1 range based on the presenter-current container
+  const normalizeCoordinates = (clientX: number, clientY: number) => {
+    // In presenter mode, we use the #presenter-current container as the reference
+    // This container holds the iframe and has the laser pointer overlay
+    const currentView = document.getElementById("presenter-current");
+
+    if (!currentView) return { x: 0, y: 0, valid: false };
+
+    const rect = currentView.getBoundingClientRect();
+
+    // Calculate relative position within the slide container
+    const x = (clientX - rect.left) / rect.width;
+    const y = (clientY - rect.top) / rect.height;
+
+    // Check if coordinates are within slide bounds (with small margin for usability)
+    const valid = x >= -0.05 && x <= 1.05 && y >= -0.05 && y <= 1.05;
+
+    // Clamp values to 0-1 range
+    const clampedX = Math.max(0, Math.min(1, x));
+    const clampedY = Math.max(0, Math.min(1, y));
+
+    return { x: clampedX, y: clampedY, valid };
+  };
+
+  // Handle mouse movement
+  const handleMouseMove = (e: MouseEvent) => {
+    const { x, y, valid } = normalizeCoordinates(e.clientX, e.clientY);
+
+    // Update the active state based on whether the mouse is over the slide
+    isPointerActive = valid;
+
+    // Update the local laser pointer position in presenter UI
+    const presenterUI = (window as any).__presenterUI;
+    if (presenterUI && presenterUI.updateLaserPointerPosition) {
+      presenterUI.updateLaserPointerPosition(x, y, valid && isLaserPointerOn);
+    }
+
+    // Send to clients when laser pointer is on
+    if (isLaserPointerTurnedOn()) {
+      // Throttle sending to avoid flooding the channel
+      const now = Date.now();
+      if (now - lastPointerSendTime > pointerSendInterval) {
+        sendPointerUpdate(x, y, valid);
+        lastPointerSendTime = now;
+      }
+    }
+  };
+
+  // Helper function to check if laser pointer is on
+  function isLaserPointerTurnedOn(): boolean {
+    // Check if the laser pointer is currently turned on
+    return isLaserPointerOn;
+  }
+
+  // Handle mouse leaving the slide area
+  const handleMouseLeave = () => {
+    if (isPointerActive) {
+      isPointerActive = false;
+      sendPointerUpdate(0, 0, false); // Send inactive state
+    }
+  };
+
+  // Global function to toggle laser pointer from UI
+  (window as any).__togglePresenterPointer = () => {
+    const previousState = isLaserPointerOn;
+    isLaserPointerOn = !isLaserPointerOn;
+
+    // Only proceed if the state actually changed
+    if (previousState !== isLaserPointerOn) {
+      if (isLaserPointerOn) {
+        // For UI-triggered toggle, we don't need to validate coordinates
+        // Just send the activation signal with center coordinates
+        const slideElement = document.querySelector(".slide");
+        let centerX = window.innerWidth / 2;
+        let centerY = window.innerHeight / 2;
+
+        // Try to get slide center if available
+        if (slideElement) {
+          const rect = slideElement.getBoundingClientRect();
+          centerX = rect.left + rect.width / 2;
+          centerY = rect.top + rect.height / 2;
+        }
+
+        const { x, y } = normalizeCoordinates(centerX, centerY);
+
+        // Send pointer update regardless of validity for UI-triggered toggle
+        sendPointerUpdate(x, y, true);
+        lastPointerSendTime = Date.now();
+      } else if (!isLaserPointerOn) {
+        sendPointerUpdate(0, 0, false);
+      }
+
+      // Update the UI to reflect the laser pointer state
+      const presenterUI = (window as any).__presenterUI;
+      if (presenterUI && presenterUI.updateLaserPointerStatus) {
+        presenterUI.updateLaserPointerStatus(isLaserPointerOn);
+      }
+    }
   };
 
   // 5. Interaction
@@ -221,18 +452,54 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
     }
   });
 
+  // Add pointer event listeners to the document for laser pointer
+  // In presenter mode, we need to listen to events on the document
+  // and determine if the mouse is over the slide area
+  document.addEventListener("mousemove", handleMouseMove);
+  document.addEventListener("mouseleave", handleMouseLeave);
+
+  // Prevent text selection during laser pointer interaction
+  document.addEventListener("mousedown", () => {
+    document.body.style.userSelect = "none";
+  });
+
+  document.addEventListener("mouseup", () => {
+    document.body.style.userSelect = "";
+  });
+
+  // Also prevent selection on the slide container itself
+  const slideContainerForSelection = document.getElementById("slide-container");
+  if (slideContainerForSelection) {
+    slideContainerForSelection.style.userSelect = "none";
+  }
+
   // Listen to sync from client (if user navigates on the projector view)
   if (channel) {
     channel.onmessage = (event) => {
-      if (event.data && event.data.type === "navigate") {
-        const index = event.data.index;
+      const message = event.data as SyncMessage;
+      if (message.type === "navigate") {
+        const index = message.index;
         if (typeof index === "number" && index !== currentIndex) {
           update(index);
         }
       }
     };
+
+    // Add debug logging for outgoing messages
+    const originalPostMessage = channel.postMessage;
+    channel.postMessage = function (message) {
+      originalPostMessage.call(this, message);
+    };
   }
 
   // Initialize
   update(0);
+
+  // Initialize laser pointer state in UI
+  setTimeout(() => {
+    const presenterUI = (window as any).__presenterUI;
+    if (presenterUI && presenterUI.updateLaserPointerStatus) {
+      presenterUI.updateLaserPointerStatus(false);
+    }
+  }, 100); // Slight delay to ensure UI is fully loaded
 }

@@ -7,10 +7,13 @@ export class PresenterUI {
   private notesContainer: HTMLElement;
   private clockElement: HTMLElement;
   private timerElement: HTMLElement;
+  private laserPointerOverlay: HTMLElement | null = null;
+  private laserPointerElement: HTMLElement | null = null;
   private startTime: number;
   private timerInterval: number | null = null;
   private isPaused: boolean = false;
   private pausedTime: number = 0;
+  private isLaserPointerActive: boolean = false;
 
   constructor() {
     this.container = document.createElement("div");
@@ -42,8 +45,23 @@ export class PresenterUI {
     pauseBtn.textContent = "Pause";
     pauseBtn.onclick = () => this.toggleTimer(pauseBtn);
 
+    // Add laser pointer toggle button
+    const laserToggleBtn = document.createElement("button");
+    laserToggleBtn.id = "laser-pointer-toggle";
+    laserToggleBtn.textContent = "🔴"; // Red circle when inactive
+    laserToggleBtn.title = "レーザーポインター (クリックでON/OFF)";
+    // Add event listener to the laser toggle button
+    laserToggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent event bubbling
+      // Toggle the laser pointer state by calling the presenter mode function directly
+      if ((window as any).__togglePresenterPointer) {
+        (window as any).__togglePresenterPointer();
+      }
+    });
+
     timerControls.appendChild(pauseBtn);
     timerControls.appendChild(resetBtn);
+    timerControls.appendChild(laserToggleBtn); // Add toggle button
     timerWrapper.appendChild(this.timerElement);
     timerWrapper.appendChild(timerControls);
 
@@ -91,11 +109,54 @@ export class PresenterUI {
     document.body.appendChild(this.container);
     document.body.classList.add("mode-presenter");
 
+    // Initialize laser pointer overlay
+    this.setupLaserPointerOverlay();
+
     this.startClock();
     this.startTimer();
 
     // Focus to capture keyboard events immediately
     this.container.focus();
+
+    // Initialize laser pointer state after UI is mounted
+    setTimeout(() => {
+      if ((window as any).__presenterUI) {
+        ((window as any).__presenterUI as any).updateLaserPointerStatus(false);
+      }
+    }, 0);
+  }
+
+  private setupLaserPointerOverlay() {
+    const currentView = document.getElementById("presenter-current");
+    if (!currentView) return;
+
+    // Create overlay container
+    this.laserPointerOverlay = document.createElement("div");
+    this.laserPointerOverlay.id = "laser-pointer-overlay";
+
+    // Create laser pointer element
+    this.laserPointerElement = document.createElement("div");
+    this.laserPointerElement.id = "presenter-laser-pointer";
+
+    this.laserPointerOverlay.appendChild(this.laserPointerElement);
+    currentView.appendChild(this.laserPointerOverlay);
+  }
+
+  public updateLaserPointerPosition(x: number, y: number, active: boolean) {
+    if (!this.laserPointerElement || !this.laserPointerOverlay) return;
+
+    // Convert normalized coordinates (0-1) to percentage
+    const percentX = x * 100;
+    const percentY = y * 100;
+
+    this.laserPointerElement.style.left = `${percentX}%`;
+    this.laserPointerElement.style.top = `${percentY}%`;
+
+    if (active) {
+      this.laserPointerElement.classList.add("active");
+    } else {
+      this.laserPointerElement.classList.remove("active");
+    }
   }
 
   public updateViews(currentIndex: number, totalSlides: number) {
@@ -192,5 +253,26 @@ export class PresenterUI {
       const pauseDuration = Date.now() - this.pausedTime;
       this.startTime += pauseDuration;
     }
+  }
+
+  public updateLaserPointerStatus(active: boolean) {
+    // Only update if the state has actually changed
+    if (this.isLaserPointerActive !== active) {
+      this.isLaserPointerActive = active;
+      const laserToggleBtn = document.getElementById("laser-pointer-toggle") as HTMLButtonElement;
+      if (laserToggleBtn) {
+        if (active) {
+          laserToggleBtn.textContent = "🟢"; // Green circle when active
+          laserToggleBtn.title = "レーザーポインター (クリックでOFF)";
+        } else {
+          laserToggleBtn.textContent = "🔴"; // Red circle when inactive
+          laserToggleBtn.title = "レーザーポインター (クリックでON)";
+        }
+      }
+    }
+  }
+
+  public getLaserPointerStatus(): boolean {
+    return this.isLaserPointerActive;
   }
 }
