@@ -605,15 +605,20 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
   window.addEventListener("hashchange", handleHash);
 
   // Initialize
-  if (window.location.hash) {
-    handleHash(); // Initialize from hash if present
-  } else {
-    update(0); // Default to first slide
-    updateHash(0); // Set initial hash
-  }
+  update(0); // Default to first slide
 
-  // Initialize laser pointer state in UI
+  // Handle hash changes on the presenter window
+  window.addEventListener("hashchange", handleHash);
+
+  // Initialize from hash if present, but wait for UI to be ready
   setTimeout(() => {
+    if (window.location.hash) {
+      handleHash(); // Initialize from hash if present
+    } else {
+      updateHash(0); // Set initial hash
+    }
+
+    // Initialize laser pointer state in UI
     const presenterUI = (window as any).__presenterUI;
     if (presenterUI && presenterUI.updateLaserPointerStatus) {
       presenterUI.updateLaserPointerStatus(false);
