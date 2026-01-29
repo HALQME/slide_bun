@@ -164,45 +164,12 @@ export class PresenterUI {
 
     // Update Current Slide
     const currentSrc = `${baseUrl}#${currentIndex + 1}`;
-    if (
-      this.currentFrame.contentWindow &&
-      this.currentFrame.src &&
-      this.currentFrame.src !== "about:blank" &&
-      this.currentFrame.src.includes(baseUrl)
-    ) {
-      try {
-        const currentUrl = new URL(this.currentFrame.src, window.location.origin);
-        if (currentUrl.hash !== `#${currentIndex + 1}`) {
-          this.currentFrame.src = currentSrc;
-        }
-      } catch {
-        this.currentFrame.src = currentSrc;
-      }
-    } else {
-      this.currentFrame.src = currentSrc;
-    }
+    this.currentFrame.src = currentSrc;
 
     // Update Next Slide
     const nextIndex = Math.min(currentIndex + 1, totalSlides - 1);
     const nextSrc = `${baseUrl}#${nextIndex + 1}`;
-
-    if (
-      this.nextFrame.contentWindow &&
-      this.nextFrame.src &&
-      this.nextFrame.src !== "about:blank" &&
-      this.nextFrame.src.includes(baseUrl)
-    ) {
-      try {
-        const nextUrl = new URL(this.nextFrame.src, window.location.origin);
-        if (nextUrl.hash !== `#${nextIndex + 1}`) {
-          this.nextFrame.src = nextSrc;
-        }
-      } catch {
-        this.nextFrame.src = nextSrc;
-      }
-    } else {
-      this.nextFrame.src = nextSrc;
-    }
+    this.nextFrame.src = nextSrc;
   }
 
   public updateNotes(notesHtml: string) {
