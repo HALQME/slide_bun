@@ -159,38 +159,29 @@ body.mode-presenter {
   margin-left: auto;
 }
 
-/* Laser Pointer Overlay in Presenter Mode */
-#presenter-current {
-  position: relative;
+/* Laser Pointer Mode - Custom Cursor for Presenter */
+#presenter-current.laser-pointer-active {
+  cursor: none; /* Hide default cursor when laser pointer is on */
 }
 
-#laser-pointer-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 100;
-  overflow: hidden;
-}
-
-#presenter-laser-pointer {
-  position: absolute;
+/* Presenter cursor element that follows mouse */
+#presenter-cursor {
+  position: fixed;
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: radial-gradient(circle, #ff3333 0%, #ff0000 40%, #cc0000 100%);
+  background: radial-gradient(circle, #ff3333 0%, #ff0000 50%, #cc0000 100%);
+  pointer-events: none;
+  z-index: 9999;
   box-shadow:
     0 0 8px 2px rgba(255, 0, 0, 0.8),
-    0 0 16px 4px rgba(255, 0, 0, 0.5),
-    0 0 32px 8px rgba(255, 0, 0, 0.3);
+    0 0 16px 4px rgba(255, 0, 0, 0.4);
   transform: translate(-50%, -50%);
-  transition: opacity 0.15s ease-out;
+  transition: opacity 0.1s ease;
   opacity: 0;
 }
 
-#presenter-laser-pointer.active {
+#presenter-cursor.active {
   opacity: 1;
 }
 

@@ -347,6 +347,23 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
   // 3. State
   let currentIndex = 0;
 
+  // Hash update helper
+  const updateHash = (index: number) => {
+    window.location.hash = `#${index + 1}`;
+  };
+
+  // Handle hash changes for bidirectional sync
+  const handleHash = () => {
+    const hash = window.location.hash.substring(1);
+    const index = parseInt(hash, 10);
+    if (!isNaN(index) && index >= 1 && index <= totalSlides) {
+      const targetIndex = index - 1;
+      if (targetIndex !== currentIndex) {
+        navigate(targetIndex, false); // Don't update hash to avoid loop
+      }
+    }
+  };
+
   // Pointer state
   let isPointerActive = false; // Whether the mouse is currently over the slide
   let isLaserPointerOn = false; // Whether the laser pointer is turned on
@@ -507,12 +524,15 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
 
   // 5. Interaction
   // In presenter mode, we control the remote slides via broadcast
-  const navigate = (index: number) => {
+  const navigate = (index: number, shouldUpdateHash: boolean = true) => {
     const target = Math.max(0, Math.min(index, totalSlides - 1));
     if (target !== currentIndex) {
       update(target);
       if (channel) {
         channel.postMessage({ type: "navigate", index: target });
+      }
+      if (shouldUpdateHash) {
+        updateHash(target);
       }
     }
   };
@@ -567,7 +587,7 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
       if (message.type === "navigate") {
         const index = message.index;
         if (typeof index === "number" && index !== currentIndex) {
-          update(index);
+          navigate(index, false); // Don't update hash for client-initiated changes
         }
       }
     };
@@ -579,8 +599,16 @@ function setupPresenterMode(channel: BroadcastChannel | null) {
     };
   }
 
+  // Handle hash changes on the presenter window
+  window.addEventListener("hashchange", handleHash);
+
   // Initialize
-  update(0);
+  if (window.location.hash) {
+    handleHash(); // Initialize from hash if present
+  } else {
+    navigate(0, false); // Default to first slide without updating hash
+    updateHash(0); // Set initial hash
+  }
 
   // Initialize laser pointer state in UI
   setTimeout(() => {
