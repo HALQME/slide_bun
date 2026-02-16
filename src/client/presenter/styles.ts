@@ -1,6 +1,6 @@
 export const presenterStyles = `
 body.mode-presenter {
-  display: block; /* Reset flex from default theme */
+  display: block;
   margin: 0;
   padding: 0;
   height: 100vh;
@@ -9,6 +9,10 @@ body.mode-presenter {
   background-color: #1a1a1a;
   color: #ffffff;
   font-family: system-ui, -apple-system, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 #presenter-dashboard {
@@ -20,47 +24,115 @@ body.mode-presenter {
   gap: 16px;
   padding: 16px;
   box-sizing: border-box;
-  outline: none; /* We focus this programmatically, avoid ring */
+  outline: none;
 }
 
-/* Header: Timer and Clock */
+/* Header with simple layout */
 #presenter-header {
   grid-column: 1 / -1;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
   align-items: center;
-  justify-content: space-between;
-  background: #2a2a2a;
+  background: #2a2a3a;
   padding: 0 24px;
   border-radius: 8px;
   font-variant-numeric: tabular-nums;
 }
 
-#presenter-clock {
-  font-size: 1.2rem;
-  color: #aaaaaa;
+/* Header Left: Clock and Slide Info */
+.presenter-header-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }
 
-#presenter-timer {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #ffffff;
+#presenter-clock {
+  font-size: 1.2rem;
+  color: #a8a8b8;
+  font-weight: 500;
+}
+
+#presenter-slide-info {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #333;
+  border-radius: 16px;
+  font-size: 1rem;
+  color: #e0e0e8;
+}
+
+#presenter-slide-info .current-slide {
+  color: #4fc3f7;
+  font-weight: bold;
+}
+
+#presenter-slide-info .total-slides {
+  color: #888899;
+}
+
+/* Header Center: Progress Bar */
+.presenter-header-center {
+  display: flex;
+  justify-content: center;
   align-items: center;
 }
 
+#presenter-progress-bar {
+  width: 100%;
+  max-width: 300px;
+  height: 6px;
+  background: #333;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+#presenter-progress-bar .progress-fill {
+  height: 100%;
+  background: #4fc3f7;
+  border-radius: 3px;
+  width: 0%;
+}
+
+/* Header Right: Timer */
+.presenter-header-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
+#presenter-timer {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #ffffff;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: #2a2a3a;
+  padding: 4px 12px;
+  border-radius: 6px;
+}
+
+#presenter-timer > div {
+  display: flex;
+  gap: 6px;
+}
+
 #presenter-timer button {
-  background: transparent;
+  background: #444;
   border: 1px solid #555;
-  color: #ccc;
-  font-size: 0.8rem;
-  padding: 4px 8px;
+  color: #e0e0e8;
+  font-size: 0.75rem;
+  padding: 3px 8px;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: 500;
+  min-width: 50px;
 }
 
 #presenter-timer button:hover {
-  background: #444;
+  background: #505050;
   color: #fff;
 }
 
@@ -72,14 +144,53 @@ body.mode-presenter {
   border-radius: 8px;
   overflow: hidden;
   position: relative;
-  border: 2px solid #444;
+  border: 1px solid #444;
+  display: flex;
+  flex-direction: column;
 }
 
 #presenter-current iframe {
+  flex: 1;
   width: 100%;
-  height: 100%;
   border: none;
   pointer-events: none; /* Let parent handle clicks if needed, or pass through */
+}
+
+/* Simple Slide Controls */
+#presenter-slide-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  background: #2a2a3a;
+  border-top: 1px solid #444;
+}
+
+#presenter-slide-controls button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid #555;
+  background: #444;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#presenter-slide-controls button:hover {
+  background: #555;
+}
+
+#laser-slide-btn {
+  font-size: 20px;
+}
+
+#laser-slide-btn.active {
+  border-color: #f44;
 }
 
 /* Side View: Next Slide */
@@ -90,7 +201,7 @@ body.mode-presenter {
   border-radius: 8px;
   overflow: hidden;
   position: relative;
-  border: 2px solid #444;
+  border: 1px solid #444;
   display: flex;
   flex-direction: column;
 }
@@ -99,11 +210,12 @@ body.mode-presenter {
   position: absolute;
   top: 0;
   left: 0;
-  background: rgba(0,0,0,0.7);
-  padding: 4px 8px;
-  font-size: 0.8rem;
+  background: #4fc3f7;
+  padding: 4px 10px;
+  font-size: 0.7rem;
   z-index: 10;
-  color: #aaa;
+  color: #fff;
+  font-weight: 600;
 }
 
 #presenter-next iframe {
@@ -118,40 +230,225 @@ body.mode-presenter {
 #presenter-notes {
   grid-column: 2 / 3;
   grid-row: 3 / -1;
-  background: #2a2a2a;
+  background: #2a2a3a;
   border-radius: 8px;
   padding: 16px;
   overflow-y: auto;
-  font-size: 1rem;
+  font-size: 0.9rem;
   line-height: 1.5;
-  color: #e0e0e0;
+  color: #e0e0e8;
+  border: 1px solid #444;
 }
 
 #presenter-notes h1, #presenter-notes h2, #presenter-notes h3 {
   font-size: 1.1em;
   margin-top: 0;
-  color: #fff;
+  margin-bottom: 0.8em;
+  color: #4fc3f7;
+  font-weight: 600;
+}
+
+#presenter-notes h1 {
+  font-size: 1.2em;
+  border-bottom: 1px solid #444;
+  padding-bottom: 0.3em;
+}
+
+#presenter-notes h2 {
+  font-size: 1.15em;
 }
 
 #presenter-notes ul, #presenter-notes ol {
-  padding-left: 1.2em;
+  padding-left: 1.5em;
+  margin-bottom: 0.8em;
+}
+
+#presenter-notes li {
+  margin-bottom: 0.3em;
 }
 
 #presenter-notes p {
   margin-bottom: 0.8em;
 }
 
-#presenter-notes .empty-notes {
-  color: #666;
-  font-style: italic;
-  text-align: center;
-  margin-top: 20px;
+#presenter-notes strong {
+  color: #fff;
+  font-weight: 600;
 }
 
-/* Controls Overlay (Optional) */
-.slide-controls {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
+#presenter-notes code {
+  background: #333;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  font-size: 0.85em;
+  color: #4fc3f7;
+}
+
+#presenter-notes blockquote {
+  border-left: 2px solid #444;
+  padding-left: 0.8em;
+  margin: 0.8em 0;
+  font-style: italic;
+  color: #b0b0b8;
+}
+
+#presenter-notes .empty-notes {
+  color: #888899;
+  font-style: italic;
+  text-align: center;
+  margin-top: 30px;
+  font-size: 1rem;
+}
+
+/* Custom scrollbar for notes */
+#presenter-notes::-webkit-scrollbar {
+  width: 6px;
+}
+
+#presenter-notes::-webkit-scrollbar-track {
+  background: #333;
+  border-radius: 3px;
+}
+
+#presenter-notes::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+#presenter-notes::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Laser Pointer Mode */
+#presenter-current.laser-pointer-active {
+  cursor: none; /* Hide default cursor when laser pointer is on */
+}
+
+/* Simple laser pointer cursor element */
+#presenter-cursor {
+  position: fixed;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f00;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+#presenter-cursor.active {
+  opacity: 1;
+}
+
+/* Simple laser pointer overlay */
+#laser-pointer-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+
+#presenter-laser-pointer {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f00;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+#presenter-laser-pointer.active {
+  opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  #presenter-dashboard {
+    grid-template-columns: 1fr 300px;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  #presenter-header {
+    padding: 0 16px;
+  }
+
+  #presenter-timer {
+    font-size: 1.4rem;
+    padding: 3px 10px;
+  }
+
+  #presenter-timer > div {
+    gap: 4px;
+  }
+
+  #presenter-timer button {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    min-width: 40px;
+  }
+}
+
+@media (max-width: 900px) {
+  #presenter-dashboard {
+    grid-template-columns: 1fr;
+    grid-template-rows: 70px 2fr 1fr 1fr;
+  }
+
+  #presenter-current {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+  }
+
+  #presenter-next {
+    grid-column: 1 / 2;
+    grid-row: 3 / 4;
+  }
+
+  #presenter-notes {
+    grid-column: 1 / 2;
+    grid-row: 4 / 5;
+  }
+
+  #presenter-header {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 0 16px;
+  }
+
+  .presenter-header-left,
+  .presenter-header-center,
+  .presenter-header-right {
+    justify-content: center;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  #presenter-slide-controls button,
+  #presenter-cursor,
+  #presenter-laser-pointer,
+  #presenter-progress-bar .progress-fill {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Focus styles for keyboard navigation */
+#presenter-slide-controls button:focus {
+  outline: 2px solid #4fc3f7;
+  outline-offset: 2px;
+}
+
+#presenter-timer button:focus {
+  outline: 2px solid #4fc3f7;
+  outline-offset: 2px;
 }
 `;

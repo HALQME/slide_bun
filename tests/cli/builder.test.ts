@@ -22,15 +22,15 @@ describe("CLI Builder", () => {
 
   it("should build HTML from markdown", async () => {
     await setup();
-    
+
     // Run build
     const outputPath = await build(INPUT_FILE, {
-        minify: false,
-        outputPath: OUTPUT_FILE,
-        autoOpen: false,
-        help: false
+      minify: false,
+      outputPath: OUTPUT_FILE,
+      autoOpen: false,
+      help: false,
     });
-    
+
     expect(outputPath).toBe(resolve(process.cwd(), OUTPUT_FILE));
     expect(existsSync(OUTPUT_FILE)).toBe(true);
 

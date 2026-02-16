@@ -490,3 +490,26 @@ img.cover {
   background: rgba(0, 0, 0, 0.35);
   color: #fff;
 }
+
+/*
+ * Laser Pointer
+ */
+#laser-pointer {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #ff0000;
+  box-shadow:
+    0 0 8px #ff0000,
+    0 0 16px #ff0000;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.2s;
+  opacity: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}

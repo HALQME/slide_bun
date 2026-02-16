@@ -8,6 +8,7 @@ import {
 } from "../core/extensions";
 import { getSlideFontSizeAttribute } from "../core/layout-design";
 import { HTMLMinifier } from "../utils/minifier";
+import { generateAspectRatioCSSVariables } from "../utils/aspect-ratio";
 import type { Presentation, PresentationMeta } from "../types";
 import path from "node:path";
 
@@ -70,9 +71,7 @@ export class HTMLRenderer {
               (t.type === "text" && t.raw.trim() === ""),
           );
 
-          const hasImage = tokens.some(
-            (t) => t.type === "image" || t.type === "styledImage",
-          );
+          const hasImage = tokens.some((t) => t.type === "image" || t.type === "styledImage");
 
           if (hasImage && isOnlyImages) {
             return this.parser.parseInline(tokens) + "\n";
@@ -89,11 +88,13 @@ export class HTMLRenderer {
     title: string;
     theme: string;
     fontSize: string;
+    aspectRatioCSS: Record<string, string>;
   } {
     return {
       title: meta.title ?? DEFAULT_TITLE,
       theme: meta.theme ?? DEFAULT_THEME,
       fontSize: meta.fontSize ? `font-size-${meta.fontSize.toLowerCase()}` : "",
+      aspectRatioCSS: generateAspectRatioCSSVariables(meta.aspectRatio),
     };
   }
 
@@ -147,7 +148,12 @@ export class HTMLRenderer {
   }
 
   private buildHTML(
-    config: { title: string; theme: string; fontSize: string },
+    config: {
+      title: string;
+      theme: string;
+      fontSize: string;
+      aspectRatioCSS: Record<string, string>;
+    },
     assets: Awaited<ReturnType<typeof this.loadAssets>>,
     slidesHtml: string,
     runtimeScript: string,
@@ -171,12 +177,21 @@ export class HTMLRenderer {
   }
 
   private buildInlineHTML(
-    config: { title: string; theme: string; fontSize: string },
+    config: {
+      title: string;
+      theme: string;
+      fontSize: string;
+      aspectRatioCSS: Record<string, string>;
+    },
     minifiedAssets: ReturnType<typeof this.minifyAssets>,
     slidesHtml: string,
     runtimeScript: string,
   ): string {
-    const inlineStyles = `${minifiedAssets.themeCss}${minifiedAssets.mainCss}${minifiedAssets.printCss}`;
+    const aspectRatioStyles = Object.entries(config.aspectRatioCSS)
+      .map(([property, value]) => `${property}: ${value};`)
+      .join(" ");
+
+    const inlineStyles = `:root { ${aspectRatioStyles} }\n${minifiedAssets.themeCss}${minifiedAssets.mainCss}${minifiedAssets.printCss}`;
 
     return this.createHTMLTemplate({
       config,
@@ -186,12 +201,24 @@ export class HTMLRenderer {
   }
 
   private buildExternalHTML(
-    config: { title: string; theme: string; fontSize: string },
+    config: {
+      title: string;
+      theme: string;
+      fontSize: string;
+      aspectRatioCSS: Record<string, string>;
+    },
     minifiedAssets: ReturnType<typeof this.minifyAssets>,
     slidesHtml: string,
     runtimeScript: string,
   ) {
+    const aspectRatioStyles = Object.entries(config.aspectRatioCSS)
+      .map(([property, value]) => `${property}: ${value};`)
+      .join(" ");
+
     const headContent = `
+      <style>
+        :root { ${aspectRatioStyles} }
+      </style>
       <link rel="stylesheet" href="/assets/styles.css">
       <link rel="stylesheet" href="/assets/theme.css">
       <link rel="stylesheet" href="/assets/print.css" media="print">
@@ -216,7 +243,12 @@ export class HTMLRenderer {
     headContent,
     bodyContent,
   }: {
-    config: { title: string; theme: string; fontSize: string };
+    config: {
+      title: string;
+      theme: string;
+      fontSize: string;
+      aspectRatioCSS: Record<string, string>;
+    };
     headContent: string;
     bodyContent: string;
   }): string {

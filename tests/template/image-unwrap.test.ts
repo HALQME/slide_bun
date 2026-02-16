@@ -14,10 +14,10 @@ describe("HTMLRenderer Image Handling", () => {
   it("should unwrap simple images from paragraphs", () => {
     const md = "![alt](img.png)";
     const presentation = parser.parse(md);
-    
+
     // Create a minimal runtime script string
-    const result = renderer["renderSlide"](presentation.slides[0]);
-    
+    const result = renderer["renderSlide"](presentation.slides[0]!);
+
     // Should contain img tag but NOT p tag wrapping it
     expect(result).toContain('<img src="img.png" alt="alt">');
     expect(result).not.toMatch(/<p>\s*<img/);
@@ -26,9 +26,9 @@ describe("HTMLRenderer Image Handling", () => {
   it("should unwrap styled images from paragraphs", () => {
     const md = "![alt](img.png){.fit}";
     const presentation = parser.parse(md);
-    
-    const result = renderer["renderSlide"](presentation.slides[0]);
-    
+
+    const result = renderer["renderSlide"](presentation.slides[0]!);
+
     expect(result).toContain('<img class="fit" src="img.png" alt="alt">');
     expect(result).not.toMatch(/<p>\s*<img/);
   });
@@ -36,9 +36,9 @@ describe("HTMLRenderer Image Handling", () => {
   it("should KEEP paragraphs for text + image", () => {
     const md = "text ![alt](img.png)";
     const presentation = parser.parse(md);
-    
-    const result = renderer["renderSlide"](presentation.slides[0]);
-    
+
+    const result = renderer["renderSlide"](presentation.slides[0]!);
+
     expect(result).toMatch(/<p>.*<img/);
   });
 });

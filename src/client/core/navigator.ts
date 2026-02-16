@@ -26,9 +26,16 @@ export class SlideNavigator {
     window.addEventListener("resize", this.handleResize);
     window.addEventListener("orientationchange", this.handleOrientation);
 
-    // Container scaling thresholds (defaults)
-    this.minContainerWidth = options.minContainerWidth ?? 1280;
-    this.minContainerHeight = options.minContainerHeight ?? 720;
+    // Get slide dimensions from CSS variables
+    const root = document.documentElement;
+    const slideWidth = parseInt(getComputedStyle(root).getPropertyValue("--slide-width") || "1280");
+    const slideHeight = parseInt(
+      getComputedStyle(root).getPropertyValue("--slide-height") || "720",
+    );
+
+    // Container scaling thresholds (defaults from CSS variables)
+    this.minContainerWidth = options.minContainerWidth ?? slideWidth;
+    this.minContainerHeight = options.minContainerHeight ?? slideHeight;
     this.minContainerScale = options.minContainerScale ?? 0.7;
   }
 
