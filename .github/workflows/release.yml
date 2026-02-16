@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDCによる認証に必須
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ビルド用にBunをセットアップ
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      # npmコマンド用にNode.jsをセットアップ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Check & Test
+        run: |
+          bun run check
+          bun run test
+
+      - name: Build
+        run: bun run build
+
+      # Secret不要。OIDCで認証し、Provenance付きで公開
+      - name: Publish to NPM
+        run: npm publish

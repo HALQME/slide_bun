@@ -54,17 +54,17 @@ Options:
       return ""; // Server keeps running
     }
 
+    // Check for version flag
+    if (args.includes("--version") || args.includes("-v")) {
+      console.log("Slide Bun v0.0.1");
+      process.exit(0);
+    }
+
     // Default: Build command
     const { inputPath, options } = parseArguments(args);
 
     if (options.help) {
       console.log(showHelp());
-      process.exit(0);
-    }
-
-    // Check for version flag
-    if (args.includes("--version") || args.includes("-v")) {
-      console.log("Slide Bun v1.0.0");
       process.exit(0);
     }
 

@@ -1,7 +1,7 @@
 {
   "name": "slide_bun",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
   "description": "zero-Config Slide Generator - Write Markdown, get beautiful slides automatically",
   "keywords": [
     "auto-layout",
@@ -27,8 +27,8 @@
   "module": "src/index.ts",
   "scripts": {
     "start": "bun run build && bun run dist/cli.js",
-    "build": "bun build src/cli.ts --outdir=./dist --target=bun --sourcemap --bytecode",
-    "test": "test",
+    "build": "bun build src/cli.ts --outdir=./dist --target=bun --sourcemap",
+    "test": "bun test",
     "check": "bun run format && bun run lint && bun run type-check",
     "type-check": "bunx tsc --noEmit",
     "lint": "oxlint",
@@ -36,12 +36,20 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check"
   },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "marked": "^17.0.1"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/marked": "^6.0.0"
+    "@types/marked": "^6.0.0",
+    "oxfmt": "^0.32.0",
+    "oxlint": "^1.47.0"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
